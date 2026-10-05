@@ -18,3 +18,10 @@ server_err.txt
 build_log.txt
 build_err.txt
 build-output.txt
+
+# Archivos locales sueltos
+cve-report-1.json
+imagenes/*.docx
+
+.vercel
+.env*
