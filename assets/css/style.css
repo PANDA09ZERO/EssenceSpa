@@ -1,0 +1,249 @@
+:root {
+    --color-principal: #53787B;    
+    --color-fondo: #EFEFEA;        
+    --color-texto: #4A4945;        
+    --color-acento: #C5A880;       
+    --color-suave: #E2ECE9;        
+    --color-blanco-puro: #FFFFFF;  
+    --color-sombra: rgba(83, 120, 123, 0.15);
+}
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body{
+    background: var(--color-fondo);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--color-texto);
+}
+main{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+}
+.caja{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 40px 30px;
+    border: 2px solid var(--color-acento);
+    width: 90%;
+    max-width: 420px;
+    min-height: 480px;
+    border-radius: 30px;
+    box-shadow: 
+        0 20px 60px var(--color-sombra),
+        0 0 0 1px rgba(197, 168, 128, 0.1);
+    background: var(--color-blanco-puro);
+    animation: fadeInUp 0.8s ease;
+}
+.caja .titulo{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.titulo img{
+    width: 130px;
+}
+.titulo h1{
+    font-family: 'Georgia', serif;
+    font-size: 32px; 
+    color: var(--color-principal);
+    margin-bottom: 25px;
+    font-weight: 300;
+    text-align: center;
+    letter-spacing: 2px;
+}
+form{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+   
+    border-radius: 10px;
+
+}
+.inputs{
+    display: flex;
+    margin-bottom: 10px;
+    
+}
+.inputs label{
+    font-size: 14px;
+    color: var(--color-texto);
+    width: 100px;
+    text-align: end;
+    padding-right: 10px;
+    padding-top: 8px;
+    font-weight: 500;
+}
+.inputs input{
+    width: 65%;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid var(--color-acento);
+    font-size: 14px;
+    padding-left: 12px;
+    background-color: var(--color-suave);
+    transition: all 0.3s ease;
+}
+
+.inputs input:focus{
+    outline: none;
+    border-color: var(--color-principal);
+    box-shadow: 0 0 0 3px rgba(83, 120, 123, 0.2);
+}
+.inputs .chk{
+    width: 20px;
+}
+.inputs .chk_label{
+    font-size: 12px;
+    color: var(--color-texto);
+}
+.links{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.links a{
+    color: var(--color-principal);
+    font-size: 13px;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.links a:hover{
+    color: var(--color-acento);
+}
+.botones{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5px;
+}
+.botones button{
+    width: 100px;
+    height: 35px;
+    border-radius: 8px;
+    border: 0;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.botones #btnPrimary{
+    background: linear-gradient(135deg, var(--color-principal), var(--color-suave));
+    color: var(--color-blanco-puro);
+    box-shadow: 0 4px 15px rgba(83, 120, 123, 0.3);
+}
+
+.botones #btnPrimary:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(83, 120, 123, 0.4);
+}
+.botones #btnSecundary{
+    background: var(--color-suave);
+    color: var(--color-texto);
+    border: 1px solid var(--color-acento);
+}
+
+.botones #btnSecundary:hover{
+    background: var(--color-acento);
+    color: var(--color-blanco-puro);
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Media Queries - Responsive */
+@media (max-width: 768px) {
+    .caja{
+        width: 95%;
+        padding: 25px 15px;
+        min-height: auto;
+    }
+    
+    .titulo img{
+        width: 100px;
+    }
+    
+    .titulo h1{
+        font-size: 24px;
+    }
+    
+    .inputs{
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+    
+    .inputs label{
+        width: 100%;
+        text-align: left;
+        padding-right: 0;
+        padding-bottom: 5px;
+    }
+    
+    .inputs input{
+        width: 100%;
+    }
+    
+    .botones{
+        width: 100%;
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .botones button{
+        width: 120px;
+        height: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    main{
+        padding: 10px;
+    }
+    
+    .caja{
+        width: 100%;
+        padding: 20px 10px;
+    }
+    
+    .titulo h1{
+        font-size: 20px;
+    }
+    
+    .links{
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .botones{
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .botones button{
+        width: 100%;
+    }
+}

@@ -1,0 +1,715 @@
+/* =============================================
+   ESSENCE SPA - HEADER STYLES (RESPONSIVE)
+   ============================================= */
+
+/* ===== VARIABLES DE COLOR ===== */
+:root {
+    --color-principal: #53787B;    
+    --color-fondo: #EFEFEA;        
+    --color-texto: #4A4945;        
+    --color-acento: #C5A880;       
+    --color-suave: #E2ECE9;        
+    --color-blanco-puro: #FFFFFF;  
+    --color-sombra: rgba(83, 120, 123, 0.15);
+    --bottom-nav-height: 60px;
+}
+
+/* ===== HEADER ===== */
+header {
+    background: var(--color-principal);
+    box-shadow: 0 4px 20px var(--color-sombra);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+}
+
+/* ===== LÍNEA SUPERIOR ===== */
+.lineaSuperior {
+    padding: 10px 40px;
+    border-bottom: 2px solid var(--color-acento);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+    min-height: 70px;
+}
+
+.linaSupIzquierda {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
+}
+
+.linaSupIzquierda i {
+    font-size: 28px;
+    color: var(--color-acento);
+}
+
+.linaSupIzquierda h2 {
+    font-family: 'Georgia', serif;
+    font-size: 26px;
+    font-weight: 300;
+    letter-spacing: 4px;
+    color: var(--color-blanco-puro);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 0;
+}
+
+.session-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #4caf50;
+    border-radius: 50%;
+    margin-right: 8px;
+    animation: pulse 2s infinite;
+}
+
+.session-text {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 2px;
+    font-weight: 300;
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    padding-left: 10px;
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ===== USER INFO HEADER ===== */
+.user-info-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 5px 18px 5px 5px;
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+.user-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--color-acento);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 15px;
+    text-transform: uppercase;
+}
+
+.user-name {
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.user-rol {
+    background: var(--color-acento);
+    padding: 3px 14px;
+    border-radius: 12px;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+/* ===== LÍNEA INFERIOR (Desktop) ===== */
+.lineaInferior {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    background: rgba(83, 120, 123, 0.95);
+    backdrop-filter: blur(10px);
+    min-height: 58px;
+    flex-wrap: nowrap;
+    gap: 15px;
+}
+
+.lineaInferior nav {
+    display: flex;
+    flex: 1;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.lineaInferior nav::-webkit-scrollbar {
+    display: none;
+}
+
+.lineaInferior nav ul {
+    display: flex;
+    list-style: none;
+    gap: 2px;
+    flex-wrap: nowrap;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.lineaInferior nav ul li {
+    flex-shrink: 0;
+}
+
+.lineaInferior nav ul li a {
+    display: block;
+    padding: 14px 16px;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    position: relative;
+    border-radius: 8px;
+    white-space: nowrap;
+}
+
+.lineaInferior nav ul li a i {
+    margin-right: 6px;
+    color: var(--color-acento);
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+
+.lineaInferior nav ul li a::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: var(--color-acento);
+    transition: width 0.3s ease;
+}
+
+.lineaInferior nav ul li a:hover {
+    color: var(--color-blanco-puro);
+    background: rgba(197, 168, 128, 0.1);
+}
+
+.lineaInferior nav ul li a:hover::before {
+    width: 60%;
+}
+
+.lineaInferior nav ul li a:hover i {
+    color: white;
+}
+
+.lineaInferior nav ul li a.active {
+    color: var(--color-acento);
+    font-weight: 500;
+}
+
+.lineaInferior nav ul li a.active::before {
+    width: 60%;
+}
+
+.lineaInferior nav ul li a.active i {
+    color: white;
+}
+
+/* ===== BUSCADOR ===== */
+.buscar {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.cajaBusca {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 25px;
+    border: 1px solid rgba(197, 168, 128, 0.25);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    min-width: 220px;
+}
+
+.cajaBusca:focus-within {
+    border-color: var(--color-acento);
+    box-shadow: 0 0 20px rgba(197, 168, 128, 0.15);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.cajaBusca button {
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    color: var(--color-acento);
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cajaBusca button i {
+    margin: 0;
+}
+
+.cajaBusca button:hover {
+    background: rgba(197, 168, 128, 0.1);
+    color: var(--color-blanco-puro);
+}
+
+.cajaBusca input {
+    padding: 8px 16px 8px 8px;
+    background: transparent;
+    border: none;
+    color: var(--color-blanco-puro);
+    font-size: 13px;
+    min-width: 130px;
+    outline: none;
+    width: 100%;
+}
+
+.cajaBusca input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 300;
+}
+
+.cajaBusca input:focus {
+    color: var(--color-blanco-puro);
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* =============================================
+   RESPONSIVE - TABLET
+   ============================================= */
+
+@media (max-width: 1024px) {
+    .lineaSuperior {
+        padding: 10px 20px;
+    }
+    
+    .lineaInferior {
+        padding: 0 20px;
+        min-height: 54px;
+    }
+    
+    .lineaInferior nav ul li a {
+        padding: 12px 12px;
+        font-size: 11px;
+    }
+    
+    .lineaInferior nav ul li a i {
+        font-size: 13px;
+    }
+
+    .cajaBusca {
+        min-width: 180px;
+    }
+    
+    .cajaBusca input {
+        min-width: 100px;
+    }
+}
+
+/* =============================================
+   RESPONSIVE - MÓVIL (Menú inferior vertical)
+   ============================================= */
+
+@media (max-width: 768px) {
+    /* === Ajustes de la línea superior === */
+    .lineaSuperior {
+        padding: 8px 15px;
+        gap: 8px;
+        min-height: 60px;
+    }
+
+    .linaSupIzquierda {
+        gap: 10px;
+        flex: 0 1 auto;
+    }
+
+    .linaSupIzquierda i {
+        font-size: 22px;
+    }
+
+    .linaSupIzquierda h2 {
+        font-size: 20px;
+        letter-spacing: 2px;
+    }
+
+    .session-text {
+        font-size: 10px;
+        letter-spacing: 1px;
+        margin-left: 5px;
+        padding-left: 5px;
+        border-left: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    /* === User Info === */
+    .user-info-header {
+        padding: 4px 12px 4px 4px;
+        gap: 8px;
+    }
+    
+    .user-name {
+        font-size: 12px;
+    }
+    
+    .user-rol {
+        font-size: 9px;
+        padding: 2px 10px;
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+
+    /* === Ocultar menú horizontal en móvil === */
+    .lineaInferior nav {
+        display: none;
+    }
+
+    .lineaInferior {
+        padding: 0 15px;
+        min-height: auto;
+        background: transparent;
+        backdrop-filter: none;
+        flex-wrap: wrap;
+    }
+
+    /* === Buscador en móvil === */
+    .buscar {
+        width: 100%;
+        padding: 8px 0;
+    }
+
+    .cajaBusca {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .cajaBusca input {
+        min-width: 60px;
+        width: 100%;
+        font-size: 13px;
+        padding: 10px 14px;
+    }
+
+    .cajaBusca button {
+        font-size: 13px;
+        padding: 10px 14px;
+    }
+
+    .cajaBusca button span {
+        display: inline;
+    }
+}
+
+/* =============================================
+   BOTTOM NAVIGATION (Menú inferior en móvil)
+   ============================================= */
+
+.bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(83, 120, 123, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 2px solid var(--color-acento);
+    padding: 5px 0 env(safe-area-inset-bottom, 5px) 0;
+    z-index: 999;
+    box-shadow: 0 -4px 20px var(--color-sombra);
+    animation: slideUp 0.3s ease;
+}
+
+.bottom-nav ul {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.bottom-nav ul li {
+    flex: 1;
+    text-align: center;
+}
+
+.bottom-nav ul li a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 4px;
+    color: rgba(255, 255, 255, 0.6);
+    text-decoration: none;
+    font-size: 10px;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    position: relative;
+    gap: 2px;
+}
+
+.bottom-nav ul li a i {
+    font-size: 22px;
+    color: rgba(255, 255, 255, 0.5);
+    transition: all 0.3s ease;
+}
+
+.bottom-nav ul li a span {
+    font-size: 9px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.bottom-nav ul li a:hover {
+    color: white;
+}
+
+.bottom-nav ul li a:hover i {
+    color: var(--color-acento);
+}
+
+.bottom-nav ul li a.active {
+    color: var(--color-acento);
+}
+
+.bottom-nav ul li a.active i {
+    color: var(--color-acento);
+    transform: scale(1.1);
+}
+
+.bottom-nav ul li a.active::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 3px;
+    background: var(--color-acento);
+    border-radius: 2px;
+}
+
+.bottom-nav ul li:last-child a i {
+    color: #DC2626;
+}
+
+.bottom-nav ul li:last-child a.active i {
+    color: #DC2626;
+}
+
+/* =============================================
+   RESPONSIVE - MÓVIL (Mostrar bottom-nav)
+   ============================================= */
+
+@media (max-width: 768px) {
+    .bottom-nav {
+        display: block;
+    }
+
+    /* Ajustar el contenido principal para no quedar debajo del bottom-nav */
+    main {
+        padding-bottom: calc(var(--bottom-nav-height) + 20px) !important;
+    }
+
+    /* Ajustar el footer para no quedar debajo del bottom-nav */
+    footer {
+        padding-bottom: calc(var(--bottom-nav-height) + 20px) !important;
+    }
+
+    /* Ajustar el body para el padding inferior */
+    body {
+        padding-bottom: var(--bottom-nav-height);
+    }
+}
+
+/* =============================================
+   RESPONSIVE - MÓVIL PEQUEÑO
+   ============================================= */
+
+@media (max-width: 480px) {
+    .lineaSuperior {
+        padding: 6px 12px;
+        gap: 6px;
+        min-height: 54px;
+    }
+
+    .linaSupIzquierda i {
+        font-size: 18px;
+    }
+
+    .linaSupIzquierda h2 {
+        font-size: 16px;
+        letter-spacing: 1px;
+    }
+
+    .session-text {
+        font-size: 9px;
+        letter-spacing: 0.5px;
+    }
+
+    .session-indicator {
+        width: 6px;
+        height: 6px;
+    }
+
+    .user-info-header {
+        padding: 3px 10px 3px 3px;
+        gap: 6px;
+    }
+    
+    .user-name {
+        display: none;
+    }
+    
+    .user-rol {
+        font-size: 8px;
+        padding: 2px 8px;
+    }
+
+    .user-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+
+    .buscar {
+        padding: 6px 0;
+    }
+
+    .cajaBusca input {
+        font-size: 12px;
+        padding: 8px 12px;
+        min-width: 50px;
+    }
+
+    .cajaBusca button {
+        font-size: 12px;
+        padding: 8px 12px;
+    }
+
+    .cajaBusca button span {
+        display: none;
+    }
+
+    .cajaBusca button i {
+        margin-right: 0;
+        font-size: 16px;
+    }
+
+    /* === Bottom Nav ajustes === */
+    .bottom-nav ul li a i {
+        font-size: 18px;
+    }
+
+    .bottom-nav ul li a span {
+        font-size: 8px;
+    }
+
+    .bottom-nav ul li a {
+        padding: 4px 2px;
+    }
+}
+
+/* =============================================
+   RESPONSIVE - MÓVIL MUY PEQUEÑO
+   ============================================= */
+
+@media (max-width: 380px) {
+    .lineaSuperior {
+        padding: 4px 8px;
+        min-height: 48px;
+    }
+
+    .linaSupIzquierda i {
+        font-size: 16px;
+    }
+
+    .linaSupIzquierda h2 {
+        font-size: 14px;
+        letter-spacing: 0.5px;
+    }
+
+    .session-text {
+        font-size: 8px;
+    }
+
+    .user-avatar {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+    }
+
+    .user-rol {
+        font-size: 7px;
+        padding: 1px 6px;
+    }
+
+    .bottom-nav ul li a i {
+        font-size: 16px;
+    }
+
+    .bottom-nav ul li a span {
+        font-size: 7px;
+    }
+}
+
+/* =============================================
+   SCROLLBAR
+   ============================================= */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-fondo);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-principal);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-acento);
+}

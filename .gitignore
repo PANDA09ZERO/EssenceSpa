@@ -1,0 +1,20 @@
+node_modules
+.next/
+out/
+build/
+coverage/
+.vercel/
+
+# Environment variables and local secrets
+.env
+.env.*
+!.env.example
+
+# TypeScript build cache
+*.tsbuildinfo
+
+server_log.txt
+server_err.txt
+build_log.txt
+build_err.txt
+build-output.txt

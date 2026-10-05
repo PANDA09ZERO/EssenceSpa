@@ -1,0 +1,671 @@
+/* =============================================
+   ESSENCE SPA - DASHBOARD STYLES
+   ============================================= */
+
+/* ===== VARIABLES DE COLOR ===== */
+:root {
+    --color-principal: #53787B;    
+    --color-fondo: #EFEFEA;        
+    --color-texto: #4A4945;        
+    --color-acento: #C5A880;       
+    --color-suave: #E2ECE9;        
+    --color-blanco-puro: #FFFFFF;  
+    --color-sombra: rgba(83, 120, 123, 0.15);
+    --color-exito: #16A34A;
+    --color-peligro: #DC2626;
+    --color-advertencia: #F59E0B;
+    --color-info: #3B82F6;
+    --bottom-nav-height: 60px;
+}
+
+/* ===== RESET Y BASE ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--color-fondo);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--color-texto);
+}
+
+/* ===== MAIN DASHBOARD ===== */
+main {
+    flex: 1;
+    padding: 20px 30px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* ===== CONTENIDO ===== */
+.contenido {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+/* ===== ESTADÍSTICAS ===== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.stat-card {
+    background: var(--color-blanco-puro);
+    border-radius: 20px;
+    padding: 22px 25px;
+    box-shadow: 0 4px 15px var(--color-sombra);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+}
+
+.stat-card.primary::before { background: var(--color-principal); }
+.stat-card.success::before { background: var(--color-exito); }
+.stat-card.warning::before { background: var(--color-advertencia); }
+.stat-card.info::before { background: var(--color-info); }
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(83, 120, 123, 0.2);
+}
+
+.stat-card .stat-icon {
+    font-size: 28px;
+    color: var(--color-acento);
+    margin-bottom: 8px;
+}
+
+.stat-card .stat-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--color-principal);
+}
+
+.stat-card .stat-label {
+    color: var(--color-texto);
+    opacity: 0.7;
+    font-size: 14px;
+    margin-top: 3px;
+}
+
+.stat-card .stat-change {
+    font-size: 12px;
+    margin-top: 8px;
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+}
+
+.stat-change.up { 
+    background: #DCFCE7; 
+    color: var(--color-exito); 
+}
+
+.stat-change.down { 
+    background: #FEE2E2; 
+    color: var(--color-peligro); 
+}
+
+.stat-change i {
+    margin-right: 4px;
+}
+
+/* ===== GRÁFICOS ===== */
+.charts-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+.chart-card {
+    background: var(--color-blanco-puro);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 4px 15px var(--color-sombra);
+}
+
+.chart-card h3 {
+    color: var(--color-principal);
+    font-size: 16px;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.chart-card h3 i {
+    margin-right: 8px;
+    color: var(--color-acento);
+}
+
+.chart-container {
+    position: relative;
+    height: 250px;
+}
+
+/* ===== TABLA DE CITAS RECIENTES ===== */
+.table-card {
+    background: var(--color-blanco-puro);
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 4px 15px var(--color-sombra);
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.table-header h3 {
+    color: var(--color-principal);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.table-header h3 i {
+    margin-right: 8px;
+    color: var(--color-acento);
+}
+
+.table-header a {
+    color: var(--color-principal);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.table-header a:hover {
+    color: var(--color-acento);
+    transform: translateX(3px);
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    padding: 12px 15px;
+    border-bottom: 2px solid var(--color-suave);
+    color: var(--color-texto);
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #E5E0DB;
+    font-size: 14px;
+}
+
+tr:hover td {
+    background: var(--color-suave);
+}
+
+/* ===== BADGES ===== */
+.badge {
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.badge-pendiente { background: #FEF3C7; color: #92400E; }
+.badge-confirmada { background: #DBEAFE; color: #1E40AF; }
+.badge-en_progreso { background: #EDE9FE; color: #6D28D9; }
+.badge-completada { background: #DCFCE7; color: #166534; }
+.badge-cancelada { background: #FEE2E2; color: #991B1B; }
+.badge-no_asistio { background: #FEE2E2; color: #991B1B; }
+
+.text-muted { 
+    color: var(--color-texto); 
+    opacity: 0.6; 
+    font-size: 13px; 
+}
+
+/* ===== FOOTER ===== */
+footer {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 25px 40px;
+    background: var(--color-principal);
+    border-top: 2px solid var(--color-acento);
+}
+
+footer .redes_sociales {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.redes_sociales .redes {
+    gap: 10px;
+    display: flex;
+    align-items: center;
+    padding: 4px 6px;
+}
+
+footer img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+footer img:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(197, 168, 128, 0.3);
+}
+
+footer a {
+    color: var(--color-blanco-puro);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+footer a:hover {
+    color: var(--color-acento);
+}
+
+footer .contacto {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+footer .contacto p {
+    color: var(--color-blanco-puro);
+    opacity: 0.7;
+    font-size: 14px;
+}
+
+footer p:last-child {
+    color: var(--color-blanco-puro);
+    opacity: 0.5;
+    font-size: 12px;
+}
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
+
+@media (max-width: 1024px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    footer {
+        flex-direction: column;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .redes_sociales {
+        align-items: center;
+    }
+
+    .contacto {
+        align-items: center;
+        text-align: center;
+    }
+}
+
+@media (max-width: 768px) {
+    main {
+        padding: 16px;
+        padding-bottom: calc(var(--bottom-nav-height) + 20px);
+    }
+
+    .contenido {
+        gap: 12px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .stat-card {
+        padding: 16px;
+    }
+
+    .stat-card .stat-number {
+        font-size: 24px;
+    }
+
+    .stat-card .stat-icon {
+        font-size: 22px;
+    }
+
+    .stat-card .stat-label {
+        font-size: 12px;
+    }
+
+    .stat-card .stat-change {
+        font-size: 10px;
+        padding: 2px 8px;
+    }
+
+    .chart-card {
+        padding: 16px;
+    }
+
+    .chart-container {
+        height: 200px;
+    }
+
+    .table-card {
+        padding: 16px;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table-responsive table {
+        min-width: 600px;
+    }
+
+    th, td {
+        padding: 8px 10px;
+        font-size: 11px;
+    }
+
+    .table-header h3 {
+        font-size: 14px;
+    }
+
+    .table-header a {
+        font-size: 13px;
+    }
+
+    footer {
+        flex-direction: column;
+        gap: 16px;
+        padding: 16px;
+    }
+
+    .redes_sociales {
+        align-items: center;
+    }
+
+    .contacto {
+        align-items: center;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    main {
+        padding: 12px;
+        padding-bottom: calc(var(--bottom-nav-height) + 16px);
+    }
+
+    .contenido {
+        gap: 12px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .stat-card {
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    .stat-card .stat-number {
+        font-size: 20px;
+    }
+
+    .stat-card .stat-icon {
+        font-size: 18px;
+    }
+
+    .stat-card .stat-label {
+        font-size: 11px;
+    }
+
+    .stat-card .stat-change {
+        font-size: 9px;
+        padding: 2px 8px;
+    }
+
+    .chart-card {
+        padding: 14px;
+        border-radius: 12px;
+    }
+
+    .chart-card h3 {
+        font-size: 13px;
+        margin-bottom: 10px;
+    }
+
+    .chart-container {
+        height: 160px;
+    }
+
+    .table-card {
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    .table-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .table-header h3 {
+        font-size: 13px;
+    }
+
+    .table-header a {
+        font-size: 12px;
+    }
+
+    th, td {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+
+    .badge {
+        font-size: 9px;
+        padding: 3px 10px;
+    }
+
+    .text-muted {
+        font-size: 11px;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -8px;
+        padding: 0 8px;
+    }
+
+    .table-responsive table {
+        min-width: 500px;
+    }
+
+    footer {
+        flex-direction: column;
+        gap: 12px;
+        padding: 12px 16px;
+    }
+}
+
+/* =============================================
+   SCROLLBAR
+   ============================================= */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-fondo);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-principal);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-acento);
+}
+
+/* =============================================
+   ANIMACIONES
+   ============================================= */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stat-card {
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+.chart-card {
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+}
+
+.chart-card:nth-child(1) { animation-delay: 0.3s; }
+.chart-card:nth-child(2) { animation-delay: 0.4s; }
+
+.table-card {
+    animation: fadeInUp 0.5s ease forwards;
+    animation-delay: 0.5s;
+    opacity: 0;
+}
+
+/* =============================================
+   ESTADOS DE CARGA
+   ============================================= */
+
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--color-fondo);
+    border-top: 3px solid var(--color-principal);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* =============================================
+   AJUSTE PARA BOTTOM NAV
+   ============================================= */
+
+/* Ajuste para cuando el bottom nav está presente */
+body.has-bottom-nav main {
+    padding-bottom: calc(var(--bottom-nav-height) + 20px);
+}
+
+body.has-bottom-nav .table-card:last-child {
+    margin-bottom: 5px;
+}
+
+
+
+/* =============================================
+   TOOLTIP PARA TABLA
+   ============================================= */
+
+td .tooltip-text {
+    display: none;
+    position: absolute;
+    background: var(--color-texto);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 100;
+}
+
+td:hover .tooltip-text {
+    display: block;
+}
+
+/* =============================================
+   MEJORAS DE ACCESIBILIDAD
+   ============================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

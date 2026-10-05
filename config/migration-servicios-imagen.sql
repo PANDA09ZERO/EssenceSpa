@@ -1,0 +1,1 @@
+ALTER TABLE servicios ADD COLUMN IF NOT EXISTS imagen TEXT;

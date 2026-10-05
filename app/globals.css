@@ -1,0 +1,183 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .bento-card {
+    @apply bg-white rounded-bento shadow-bento p-6 transition-all duration-300 hover:shadow-bento-hover;
+  }
+
+  .bento-card-sm {
+    @apply bg-white rounded-bento shadow-bento p-4 transition-all duration-300 hover:shadow-bento-hover;
+  }
+
+  .bento-card-lg {
+    @apply bg-white rounded-bento shadow-bento p-8 transition-all duration-300 hover:shadow-bento-hover;
+  }
+
+  .bento-grid {
+    @apply grid gap-4;
+  }
+
+  .bento-grid-2 {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4;
+  }
+
+  .bento-grid-3 {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+
+  .bento-grid-4 {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4;
+  }
+
+  .bento-grid-masonry {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-[minmax(180px,auto)];
+  }
+
+  .bento-item-1x1 {
+    @apply row-span-1 col-span-1;
+  }
+
+  .bento-item-2x1 {
+    @apply row-span-1 col-span-1 md:col-span-2;
+  }
+
+  .bento-item-1x2 {
+    @apply row-span-2 col-span-1;
+  }
+
+  .bento-item-2x2 {
+    @apply row-span-2 col-span-1 md:col-span-2;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-brand-green-light focus:border-brand-green focus:ring-2 focus:ring-brand-green/20 outline-none transition-all;
+  }
+
+  .label-field {
+    @apply block text-sm font-medium text-brand-text mb-2;
+  }
+
+  .btn-primary {
+    @apply bg-brand-green text-white px-6 py-3 rounded-xl font-medium hover:bg-brand-green-dark transition-colors duration-200;
+  }
+
+  .btn-secondary {
+    @apply bg-brand-cream text-brand-text px-6 py-3 rounded-xl font-medium hover:bg-brand-cream-dark transition-colors duration-200;
+  }
+
+  .appointment-modal {
+    animation: appointment-modal-in 420ms cubic-bezier(.22, 1, .36, 1) both;
+  }
+
+  .date-time-field {
+    @apply relative overflow-hidden rounded-2xl border border-brand-green/15 bg-brand-cream-light transition-all duration-300;
+  }
+
+  .date-time-field::after {
+    content: "";
+    @apply absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-brand-green transition-transform duration-300;
+  }
+
+  .date-time-field:focus-within {
+    @apply -translate-y-0.5 bg-white shadow-bento;
+  }
+
+  .date-time-field:focus-within::after {
+    @apply scale-x-100;
+  }
+
+  .date-time-input {
+    @apply w-full border-0 bg-transparent px-10 py-4 text-brand-text outline-none;
+    color-scheme: light;
+  }
+
+  .date-time-input::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .appointment-summary {
+    animation: appointment-summary-in 300ms ease-out both;
+  }
+
+  .date-time-picker {
+    animation: appointment-summary-in 280ms ease-out both;
+  }
+
+  .clock-face-small {
+    @apply relative flex h-36 w-36 items-center justify-center rounded-full bg-brand-cream-light;
+  }
+
+  .clock-number-small {
+    @apply absolute left-1/2 top-1/2 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-semibold transition-all;
+  }
+
+  .clock-number-small.selected {
+    @apply bg-brand-green text-white shadow-bento;
+  }
+
+  .clock-hand-small {
+    @apply absolute bottom-1/2 left-1/2 h-12 w-0.5 origin-bottom bg-brand-green;
+  }
+
+  .clock-dot-small {
+    @apply absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-green;
+  }
+}
+
+@keyframes appointment-modal-in {
+  from { opacity: 0; transform: translateY(18px) scale(.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes appointment-summary-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes catalog-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.catalog-reveal {
+  animation: catalog-rise 420ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+@keyframes header-menu-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes header-active-in {
+  from { opacity: 0.75; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.header-mobile-menu {
+  animation: header-menu-in 180ms ease-out both;
+}
+
+.header-nav-active {
+  animation: header-active-in 220ms cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.header-profile {
+  transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+}
+
+.header-profile:hover {
+  border-color: rgb(26 26 26 / 25%);
+  background-color: white;
+  box-shadow: 0 4px 12px rgb(26 26 26 / 8%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .appointment-modal, .appointment-summary, .date-time-picker, .header-mobile-menu, .header-nav-active, .catalog-reveal { animation: none; }
+  .date-time-field, .date-time-field::after, .header-profile, .header-nav-link, .header-nav-indicator { transition: none; }
+}

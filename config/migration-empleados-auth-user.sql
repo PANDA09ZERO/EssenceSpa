@@ -1,0 +1,2 @@
+ALTER TABLE empleados
+  ADD COLUMN IF NOT EXISTS auth_user_id UUID UNIQUE REFERENCES auth.users(id) ON DELETE SET NULL;

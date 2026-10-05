@@ -1,0 +1,636 @@
+/* =============================================
+   ESSENCE SPA - ESTILOS DE PROMOCIONES
+   ============================================= */
+
+/* ===== VARIABLES DE COLOR ===== */
+:root {
+    --color-principal: #53787B;    /* Verde Eucalipto (Identidad) */
+    --color-fondo: #EFEFEA;        /* Blanco Hueso (Fondo general) */
+    --color-texto: #4A4945;        /* Gris Topo (Lecturabilidad) */
+    --color-acento: #C5A880;       /* Oro/Arena (Detalles y elegancia) */
+    --color-suave: #E2ECE9;        /* Menta Claro (Fondos secundarios) */
+    --color-blanco-puro: #FFFFFF;  /* Para contrastar sobre el verde principal */
+    --color-sombra: rgba(83, 120, 123, 0.15);
+    --color-secundario: #53787B;   /* Verde Azulado */
+    --color-dorado: #C5A880;       /* Oro/Arena (alias) */
+    --color-blanco: #FFFFFF;       /* Blanco puro (alias) */
+    --color-borde: #D5D0C9;        /* Gris suave para bordes */
+    --color-footer: #53787B;       /* Footer */
+    --color-texto-footer: #EFEFEA; /* Texto footer claro */
+    --sombra: 0 4px 15px rgba(83, 120, 123, 0.15);
+}
+
+/* ===== RESET Y BASE ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--color-fondo);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--color-texto);
+}
+
+/* ===== MAIN ===== */
+main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 30px;
+    background: var(--color-fondo);
+}
+
+/* ===== CONTENEDOR PRINCIPAL ===== */
+.main-container {
+    display: flex;
+    width: 100%;
+    max-width: 1400px;
+    justify-content: center;
+}
+
+/* ===== CONTENIDO PROMOCIONES ===== */
+.contenido-promociones {
+    width: 100%;
+    max-width: 1180px;
+}
+
+.panel-promociones {
+    width: 100%;
+    background: var(--color-blanco-puro);
+    border-radius: 20px;
+    box-shadow: 0 20px 60px var(--color-sombra), 0 0 0 1px rgba(197, 168, 128, 0.1);
+    padding: 30px;
+    transition: all 0.3s ease;
+}
+
+.panel-promociones:hover {
+    box-shadow: 0 30px 80px rgba(83, 120, 123, 0.2), 0 0 0 1px rgba(197, 168, 128, 0.2);
+}
+
+/* ===== ENCABEZADO PANEL ===== */
+.encabezado-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--color-suave);
+}
+
+.encabezado-panel h1 {
+    font-family: 'Georgia', serif;
+    font-size: 32px;
+    font-weight: 300;
+    color: var(--color-principal);
+    letter-spacing: 2px;
+}
+
+.encabezado-panel p {
+    font-size: 15px;
+    color: var(--color-texto);
+    opacity: 0.7;
+    margin-top: 5px;
+}
+
+.usuario-activo {
+    background: var(--color-suave);
+    color: var(--color-principal);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* ===== MENSAJES ===== */
+.mensaje {
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    text-align: center;
+    animation: fadeInUp 0.5s ease;
+}
+
+.mensaje.error {
+    background: #FEE2E2;
+    color: #DC2626;
+    border: 1px solid #FECACA;
+}
+
+.mensaje.exito {
+    background: #DCFCE7;
+    color: #16A34A;
+    border: 1px solid #BBF7D0;
+}
+
+/* ===== FORMULARIO ===== */
+.form-promocion {
+    margin-bottom: 30px;
+}
+
+.grid-formulario {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.grupo-input {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.grupo-input.grupo-completo {
+    grid-column: 1 / -1;
+}
+
+.grupo-input label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-texto);
+    letter-spacing: 0.5px;
+}
+
+.grupo-input input,
+.grupo-input select,
+.grupo-input textarea {
+    padding: 12px 16px;
+    border: 1.5px solid var(--color-borde);
+    border-radius: 12px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background: var(--color-fondo);
+    color: var(--color-texto);
+    outline: none;
+    font-family: inherit;
+}
+
+.grupo-input input:focus,
+.grupo-input select:focus,
+.grupo-input textarea:focus {
+    border-color: var(--color-acento);
+    box-shadow: 0 0 0 4px rgba(197, 168, 128, 0.15);
+    background: var(--color-blanco-puro);
+}
+
+.grupo-input textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* ===== BOTONES ===== */
+.botones-promocion {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.btn-principal,
+.btn-secundario {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+    font-family: inherit;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-principal {
+    background: var(--color-principal);
+    color: var(--color-blanco-puro);
+    box-shadow: 0 4px 15px var(--color-sombra);
+}
+
+.btn-principal:hover {
+    background: #3D6366;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(83, 120, 123, 0.35);
+}
+
+.btn-secundario {
+    background: transparent;
+    color: var(--color-texto);
+    border: 1.5px solid var(--color-borde);
+}
+
+.btn-secundario:hover {
+    background: var(--color-fondo);
+    border-color: var(--color-texto);
+    transform: translateY(-2px);
+}
+
+/* ===== SEPARADOR ===== */
+.separador {
+    height: 2px;
+    background: var(--color-suave);
+    margin: 30px 0;
+    border-radius: 2px;
+}
+
+/* ===== TABLA ===== */
+.encabezado-tabla {
+    margin-bottom: 20px;
+}
+
+.encabezado-tabla h2 {
+    font-family: 'Georgia', serif;
+    font-size: 24px;
+    font-weight: 300;
+    color: var(--color-principal);
+    letter-spacing: 1px;
+}
+
+.encabezado-tabla p {
+    font-size: 14px;
+    color: var(--color-texto);
+    opacity: 0.7;
+    margin-top: 5px;
+}
+
+.tabla-responsive {
+    overflow-x: auto;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px var(--color-sombra);
+}
+
+.tabla-promociones {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--color-blanco-puro);
+}
+
+.tabla-promociones thead {
+    background: var(--color-principal);
+}
+
+.tabla-promociones th {
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-blanco-puro);
+    font-size: 14px;
+    letter-spacing: 0.5px;
+}
+
+.tabla-promociones td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--color-borde);
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+.tabla-promociones tbody tr:hover {
+    background: var(--color-suave);
+}
+
+.tabla-promociones tbody tr:nth-child(even) {
+    background: rgba(226, 236, 233, 0.3);
+}
+
+.texto-suave {
+    color: var(--color-texto);
+    opacity: 0.6;
+    font-size: 13px;
+}
+
+.sin-registros {
+    text-align: center;
+    padding: 40px;
+    color: var(--color-texto);
+    opacity: 0.5;
+    font-style: italic;
+}
+
+/* ===== BADGES ===== */
+.badge-estado {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.estado-activa {
+    background: #DCFCE7;
+    color: #16A34A;
+}
+
+.estado-inactiva {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.estado-expirada {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+/* ===== ACCIONES TABLA ===== */
+.acciones-tabla {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-editar,
+.btn-eliminar {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-editar {
+    background: var(--color-suave);
+    color: var(--color-principal);
+}
+
+.btn-editar:hover {
+    background: var(--color-principal);
+    color: var(--color-blanco-puro);
+}
+
+.btn-eliminar {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.btn-eliminar:hover {
+    background: #DC2626;
+    color: var(--color-blanco-puro);
+}
+
+/* ===== FOOTER ===== */
+footer {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 25px 40px;
+    background: var(--color-principal);
+    border-top: 2px solid var(--color-acento);
+}
+
+footer .redes_sociales {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.redes_sociales .redes {
+    gap: 10px;
+    display: flex;
+    align-items: center;
+    padding: 4px 6px;
+}
+
+footer img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+footer img:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(197, 168, 128, 0.3);
+}
+
+footer a {
+    color: var(--color-blanco-puro);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+footer a:hover {
+    color: var(--color-acento);
+}
+
+footer .contacto {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+footer .contacto p {
+    color: var(--color-blanco-puro);
+    opacity: 0.7;
+    font-size: 14px;
+}
+
+footer p:last-child {
+    color: var(--color-blanco-puro);
+    opacity: 0.5;
+    font-size: 12px;
+}
+
+/* ===== ANIMACIONES ===== */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 1024px) {
+    .grid-formulario {
+        grid-template-columns: 1fr;
+    }
+
+    .encabezado-panel {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .encabezado-panel h1 {
+        font-size: 26px;
+    }
+
+    .tabla-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tabla-promociones th,
+    .tabla-promociones td {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 768px) {
+    main {
+        padding: 16px;
+    }
+
+    .panel-promociones {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .encabezado-panel {
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+    }
+
+    .encabezado-panel h1 {
+        font-size: 22px;
+        letter-spacing: 1px;
+    }
+
+    .encabezado-panel p {
+        font-size: 13px;
+    }
+
+    .form-promocion {
+        margin-bottom: 20px;
+    }
+
+    .grid-formulario {
+        gap: 12px;
+    }
+
+    .botones-promocion {
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .btn-principal,
+    .btn-secundario {
+        width: 100%;
+        padding: 12px 20px;
+        min-height: 44px;
+        font-size: 14px;
+    }
+
+    .acciones-tabla {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .separador {
+        margin: 20px 0;
+    }
+
+    .encabezado-tabla {
+        margin-bottom: 12px;
+    }
+
+    .encabezado-tabla h2 {
+        font-size: 20px;
+    }
+
+    .tabla-promociones th,
+    .tabla-promociones td {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .badge-estado {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+
+    footer {
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px;
+    }
+
+    footer .redes_sociales,
+    footer .contacto {
+        align-items: center;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .panel-promociones {
+        padding: 12px;
+        border-radius: 10px;
+    }
+
+    .encabezado-panel h1 {
+        font-size: 18px;
+        letter-spacing: 0.5px;
+    }
+
+    .encabezado-panel p {
+        font-size: 12px;
+    }
+
+    .usuario-activo {
+        font-size: 11px;
+        padding: 6px 12px;
+    }
+
+    .grupo-input input,
+    .grupo-input select,
+    .grupo-input textarea {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+
+    .grupo-input label {
+        font-size: 12px;
+    }
+
+    .tabla-promociones th,
+    .tabla-promociones td {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+
+    .encabezado-tabla h2 {
+        font-size: 18px;
+    }
+
+    .btn-principal,
+    .btn-secundario {
+        font-size: 13px;
+        padding: 12px 16px;
+    }
+
+    .btn-editar,
+    .btn-eliminar {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+
+    .sin-registros {
+        padding: 24px;
+        font-size: 13px;
+    }
+
+    footer {
+        padding: 16px;
+        gap: 12px;
+    }
+
+    footer .contacto p {
+        font-size: 12px;
+    }
+}
