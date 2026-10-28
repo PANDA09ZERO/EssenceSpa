@@ -237,13 +237,13 @@ export default function PublicCatalog({ services, promotions, dataUnavailable }:
       </section>
 
       {selectedServices.length > 0 && (
-        <div className="fixed bottom-5 left-1/2 z-[1000] w-[calc(100%-2.5rem)] max-w-md -translate-x-1/2 sm:left-auto sm:right-5 sm:w-auto sm:translate-x-0">
+        <div className="fixed bottom-5 right-5 z-[1000]">
           {isOrderPanelOpen && (
             <section
               id="order-panel"
               role="dialog"
               aria-labelledby="order-title"
-              className="absolute bottom-full right-0 mb-3 max-h-[min(70vh,32rem)] w-full overflow-y-auto border border-brand-cream-dark bg-white p-5 text-brand-text shadow-2xl sm:w-[22rem]"
+              className="absolute bottom-full right-0 mb-4 max-h-[min(70vh,32rem)] w-[min(22rem,calc(100vw-2.5rem))] overflow-y-auto rounded-2xl border border-brand-cream-dark bg-white p-5 text-brand-text shadow-2xl"
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -275,19 +275,15 @@ export default function PublicCatalog({ services, promotions, dataUnavailable }:
           )}
           <button
             type="button"
+            aria-label={`Ver mi selección: ${selectedServices.length} ${selectedServices.length === 1 ? "servicio" : "servicios"}, ${formatPrice(total)}`}
+            title="Ver mi selección"
             aria-expanded={isOrderPanelOpen}
             aria-controls={isOrderPanelOpen ? "order-panel" : undefined}
             onClick={() => setIsOrderPanelOpen((open) => !open)}
-            className="flex w-full items-center justify-between gap-4 border border-brand-cream-light bg-brand-green px-4 py-3 text-left text-white shadow-xl transition-colors hover:bg-brand-green-dark sm:min-w-72"
+            className="relative flex h-16 w-16 items-center justify-center rounded-full border border-white/30 bg-brand-green text-white shadow-xl transition-transform hover:scale-105 active:scale-95 motion-reduce:transition-none"
           >
-            <span className="flex min-w-0 items-center gap-3">
-              <ShoppingBag size={20} className="shrink-0" />
-              <span className="min-w-0">
-                <span className="block text-sm font-semibold">Ver mi selección</span>
-                <span className="block truncate text-xs text-white/80">{selectedServices.length} {selectedServices.length === 1 ? "servicio" : "servicios"}</span>
-              </span>
-            </span>
-            <span className="shrink-0 text-sm font-semibold">{formatPrice(total)}</span>
+            <ShoppingBag size={25} aria-hidden="true" strokeWidth={1.6} />
+            <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-white bg-[#EAE4D9] px-1 text-[11px] font-bold text-brand-text">{selectedServices.length}</span>
           </button>
         </div>
       )}
