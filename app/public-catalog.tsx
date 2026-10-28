@@ -1,9 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ArrowDown, ArrowUpRight, Check, Clock3, Facebook, Instagram, MapPin, MessageCircle, Plus, Search, ShoppingBag, Sparkles, Tag, X } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Check, Clock3, Facebook, Instagram, MapPin, Menu, MessageCircle, Plus, Search, ShoppingBag, Sparkles, Tag, X } from "lucide-react";
 import type { PublicPromotion, PublicService } from "./page";
 import coverImage from "../imagenes/WhatsApp Image 2026-09-26 at 10.11.45 PM.jpeg";
 import detailImageOne from "../imagenes/WhatsApp Image 2026-09-26 at 10.11.46 PM (1).jpeg";
@@ -25,16 +24,6 @@ const galleryImages = [
   detailImageSeven,
   detailImageEight,
 ];
-const galleryLayout = [
-  "col-span-2 row-span-2",
-  "col-span-1 row-span-2",
-  "col-span-1",
-  "col-span-1",
-  "col-span-1",
-  "col-span-1",
-  "col-span-2",
-  "col-span-1 row-span-2",
-];
 
 interface Props {
   services: PublicService[];
@@ -54,6 +43,8 @@ function formatDate(date: string | null) {
 }
 
 export default function PublicCatalog({ services, promotions, dataUnavailable }: Props) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showFullGallery, setShowFullGallery] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("Todos");
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
@@ -86,10 +77,10 @@ export default function PublicCatalog({ services, promotions, dataUnavailable }:
   }
 
   return (
-    <main className="min-h-screen bg-brand-screen text-brand-text">
-      <section className="relative isolate flex min-h-[680px] items-end overflow-hidden bg-brand-green-dark text-white sm:min-h-[740px]">
+    <main className="public-catalog min-h-screen bg-brand-cream text-brand-text">
+      <section className="relative isolate flex min-h-[560px] items-end overflow-hidden bg-brand-green-dark text-white sm:min-h-[620px]">
         <Image src={coverImage} alt="Ambiente de Essence Spa" fill priority sizes="100vw" className="-z-20 object-cover object-center" />
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-black/40" />
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-gradient-to-r from-black/80 via-black/55 to-black/20" />
         <header className="absolute inset-x-0 top-0 z-10 border-b border-white/20">
           <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
             <a href="#inicio" className="flex items-center gap-3" aria-label="Essence Spa, inicio">
@@ -102,24 +93,31 @@ export default function PublicCatalog({ services, promotions, dataUnavailable }:
               <a className="transition-colors hover:text-white" href="https://maps.app.goo.gl/2uKCedfdADDGvCMc7" target="_blank" rel="noreferrer">Cómo llegar</a>
               <a className="transition-colors hover:text-white" href="https://www.facebook.com/profile.php?id=61583364283486" target="_blank" rel="noreferrer" aria-label="Facebook de Essence Spa"><Facebook size={18} /></a>
               <a className="transition-colors hover:text-white" href="https://www.instagram.com/essence.spa_pcl" target="_blank" rel="noreferrer" aria-label="Instagram de Essence Spa"><Instagram size={18} /></a>
-              <a className="transition-colors hover:text-white" href="https://wa.me/51917650720" target="_blank" rel="noreferrer" aria-label="WhatsApp de Essence Spa"><MessageCircle size={18} /></a>
+              <a className="transition-colors hover:text-white" href="https://wa.me/51917650720" target="_blank" rel="noreferrer" aria-label="WhatsApp de Essence Spa" style={{display:"inline-flex",gap:8,alignItems:"center",border:"1px solid #ffffff80",borderRadius:999,padding:"12px 18px"}}><MessageCircle size={18} /> Consultar</a>
             </nav>
+            <button type="button" aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"} aria-expanded={mobileMenuOpen} aria-controls="catalog-mobile-nav" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/40 md:hidden">{mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}</button>
           </div>
+          {mobileMenuOpen && <nav id="catalog-mobile-nav" aria-label="Navegación móvil" className="flex flex-col border-t border-white/20 bg-brand-green p-4 md:hidden">
+            <a href="#servicios" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3">Servicios</a>
+            <a href="#promociones" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3">Promociones</a>
+            <a href="https://wa.me/51917650720" target="_blank" rel="noreferrer" className="px-4 py-3">Consultar por WhatsApp ↗</a>
+          </nav>}
         </header>
 
         <div id="inicio" className="mx-auto w-full max-w-7xl px-5 pb-20 pt-36 sm:px-8 sm:pb-24">
-          <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-brand-gold-light">Belleza, cuidado y pausa</p>
-          <h1 className="max-w-3xl font-display text-5xl font-medium leading-[1.04] sm:text-7xl">Essence Spa</h1>
+          <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-white/80">Belleza, cuidado y pausa</p>
+          <h1 className="max-w-3xl font-display text-5xl font-medium leading-[1.04] sm:text-7xl">Un momento<br />para ti.</h1>
           <p className="mt-6 max-w-xl text-base leading-7 text-white/90 sm:text-lg">
             Un espacio para renovar tu estilo y regalarte un momento para ti.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-5">
-            <a href="#servicios" className="inline-flex items-center gap-3 border border-brand-cream-light bg-brand-green px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-green-dark">
+            <a href="#servicios" className="inline-flex items-center gap-3 rounded-full border border-brand-cream-light bg-brand-cream px-6 py-3 text-sm font-semibold text-brand-text transition-colors hover:bg-white">
               Explorar servicios <ArrowDown size={17} />
             </a>
             <a href="#promociones" className="text-sm font-medium text-white underline decoration-white/60 underline-offset-4 transition-colors hover:text-brand-gold-light">
               Ver promociones
             </a>
+            <a href="https://wa.me/51917650720" target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-white"><MessageCircle size={18} /> Consultar por WhatsApp <ArrowUpRight size={16} /></a>
             <a href="https://maps.app.goo.gl/2uKCedfdADDGvCMc7" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-medium text-white underline decoration-white/60 underline-offset-4 transition-colors hover:text-brand-gold-light">
               Cómo llegar <MapPin size={17} />
             </a>
@@ -127,21 +125,61 @@ export default function PublicCatalog({ services, promotions, dataUnavailable }:
         </div>
       </section>
 
-      <section aria-labelledby="gallery-title" className="border-b border-brand-cream-dark bg-white">
-        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-20">
-          <div className="mb-8 max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-terracotta">Un vistazo a Essence</p>
-            <h2 id="gallery-title" className="mt-2 font-display text-3xl font-medium sm:text-4xl">Un espacio para sentirte bien</h2>
-            <p className="mt-3 text-sm leading-6 text-brand-text-light">Detalles, cuidado y momentos para dedicarte tiempo.</p>
+      <section id="servicios" className="scroll-mt-8 mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-20">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-green-light">Nuestro menú</p>
+            <h2 className="mt-2 font-display text-4xl font-medium sm:text-5xl">Servicios</h2>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-brand-text-light">Encuentra el cuidado que buscas y consulta precios y duración.</p>
           </div>
-          <div className="grid auto-rows-[130px] grid-cols-2 gap-2 sm:auto-rows-[170px] sm:gap-3 lg:auto-rows-[190px] lg:grid-cols-4">
-            {galleryImages.map((image, index) => (
-              <div key={image.src} className={`group relative overflow-hidden bg-brand-green/10 ${galleryLayout[index]}`}>
-                <Image src={image} alt={`Essence Spa, detalle ${index + 1}`} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 25vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
-              </div>
-            ))}
-          </div>
+          <label className="flex w-full items-center gap-3 rounded-xl border border-brand-green/25 bg-white px-4 py-3 focus-within:ring-2 focus-within:ring-brand-green lg:max-w-xs">
+            <Search size={18} className="shrink-0 text-brand-green-light" />
+            <input type="search" aria-label="Buscar servicio" placeholder="Buscar servicio" value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-brand-text-light" />
+          </label>
         </div>
+
+        <div className="mt-7 flex gap-2 overflow-x-auto pb-2" role="group" aria-label="Filtrar servicios por categoría">
+          {categories.map((item) => (
+            <button key={item} type="button" aria-pressed={category === item} onClick={() => setCategory(item)} className={`min-h-11 shrink-0 rounded-full border px-5 py-2 text-sm transition-colors ${category === item ? "border-brand-green bg-brand-green text-white" : "border-brand-green-light bg-transparent text-brand-green-light hover:border-brand-green hover:text-brand-green"}`}>
+              {item}
+            </button>
+          ))}
+        </div>
+
+        {dataUnavailable && <p role="status" className="mt-6 border-l-2 border-brand-terracotta pl-3 text-sm text-brand-text-light">Algunos datos no están disponibles por el momento.</p>}
+        {filteredServices.length ? (
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filteredServices.map((service, index) => {
+              return (
+                <article key={service.id} className="catalog-reveal group flex flex-col overflow-hidden rounded-2xl border border-brand-cream-dark bg-white transition-shadow hover:shadow-bento" style={{ animationDelay: `${Math.min(index, 6) * 55}ms` }}>
+                  <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-brand-green/10">
+                    {service.imagen ? <Image src={service.imagen} alt={`Imagen de ${service.nombre}`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" unoptimized className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" /> : <Sparkles aria-hidden="true" size={34} strokeWidth={1.2} className="text-brand-green-light/60" />}
+                    {service.categoria && <span className="absolute left-3 top-3 bg-white/95 px-3 py-1 text-xs font-medium text-brand-green">{service.categoria}</span>}
+                  </div>
+                  <div className="flex flex-1 flex-col p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="font-display text-xl font-semibold leading-6">{service.nombre}</h3>
+                      <span className="shrink-0 text-sm font-semibold text-brand-terracotta">{formatPrice(service.precio)}</span>
+                    </div>
+                    {service.descripcion && <p className="mt-2 line-clamp-2 text-sm leading-5 text-brand-text-light">{service.descripcion}</p>}
+                    {service.duracion && <p className="mt-4 flex items-center gap-2 text-xs text-brand-text-light"><Clock3 size={14} />{service.duracion} min</p>}
+                    <button type="button" aria-pressed={selectedServiceIds.includes(service.id)} onClick={() => toggleService(service.id)} className={`mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-colors ${selectedServiceIds.includes(service.id) ? "border-brand-green bg-brand-green text-white" : "border-brand-cream-dark text-brand-green hover:border-brand-green"}`}>
+                      {selectedServiceIds.includes(service.id) ? <Check size={16} /> : <Plus size={16} />}
+                      {selectedServiceIds.includes(service.id) ? "En tu selección" : "Elegir servicio"}
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div role="status" className="mt-8 rounded-2xl border border-brand-cream-dark bg-white p-8 text-center">
+            <Search size={24} className="mx-auto mb-3" />
+            <p className="text-sm text-brand-text-light">{services.length ? "No encontramos servicios con esos criterios." : dataUnavailable ? "El catálogo está temporalmente sin conexión. Te ayudamos a elegir por WhatsApp." : "Los servicios se publicarán aquí próximamente."}</p>
+            {dataUnavailable && <a href="https://wa.me/51917650720" target="_blank" rel="noreferrer" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-brand-green px-5 py-3 text-sm text-white"><MessageCircle size={18} /> Consultar servicios</a>}
+            {services.length > 0 && <button type="button" onClick={() => { setSearch(""); setCategory("Todos"); }} className="mt-4 min-h-11 rounded-full bg-brand-green px-5 py-2 text-sm text-white">Limpiar filtros</button>}
+          </div>
+        )}
       </section>
 
       <section id="promociones" className="scroll-mt-8 border-b border-brand-cream-dark bg-brand-green/10">
@@ -175,61 +213,27 @@ export default function PublicCatalog({ services, promotions, dataUnavailable }:
               ))}
             </div>
           ) : (
-            <p className="border-t border-brand-cream-dark py-7 text-sm text-brand-text-light">No hay promociones vigentes en este momento. Vuelve pronto.</p>
+            <p className="border-t border-brand-cream-dark py-7 text-sm text-brand-text-light">{dataUnavailable ? "No pudimos consultar las promociones. Pregúntanos por WhatsApp por las ofertas disponibles." : "No hay promociones vigentes en este momento. Vuelve pronto."}</p>
           )}
         </div>
       </section>
 
-      <section id="servicios" className="scroll-mt-8 mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-20">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-green-light">Nuestro menú</p>
-            <h2 className="mt-2 font-display text-4xl font-medium sm:text-5xl">Servicios</h2>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-brand-text-light">Encuentra el cuidado que buscas y consulta precios y duración.</p>
+      <section aria-labelledby="gallery-title" className="border-b border-brand-cream-dark bg-white">
+        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-20">
+          <div className="mb-8 max-w-xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-terracotta">Un vistazo a Essence</p>
+            <h2 id="gallery-title" className="mt-2 font-display text-3xl font-medium sm:text-4xl">Un espacio para sentirte bien</h2>
+            <p className="mt-3 text-sm leading-6 text-brand-text-light">Detalles, cuidado y momentos para dedicarte tiempo.</p>
           </div>
-          <label className="flex w-full items-center gap-3 border-b border-brand-green-light py-3 lg:max-w-xs">
-            <Search size={18} className="shrink-0 text-brand-green-light" />
-            <input type="search" aria-label="Buscar servicio" placeholder="Buscar servicio" value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-brand-text-light" />
-          </label>
-        </div>
-
-        <div className="mt-7 flex gap-2 overflow-x-auto pb-2" role="group" aria-label="Filtrar servicios por categoría">
-          {categories.map((item) => (
-            <button key={item} type="button" aria-pressed={category === item} onClick={() => setCategory(item)} className={`shrink-0 border px-4 py-2 text-sm transition-colors ${category === item ? "border-brand-green bg-brand-green text-white" : "border-brand-green-light bg-transparent text-brand-green-light hover:border-brand-green hover:text-brand-green"}`}>
-              {item}
-            </button>
-          ))}
-        </div>
-
-        {dataUnavailable && <p role="status" className="mt-6 border-l-2 border-brand-terracotta pl-3 text-sm text-brand-text-light">Algunos datos no están disponibles por el momento.</p>}
-        {filteredServices.length ? (
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredServices.map((service, index) => {
-              return (
-                <article key={service.id} className="catalog-reveal group overflow-hidden border border-brand-cream-dark bg-white" style={{ animationDelay: `${Math.min(index, 6) * 55}ms` }}>
-                  <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-brand-green/10">
-                    {service.imagen ? <Image src={service.imagen} alt={`Imagen de ${service.nombre}`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" unoptimized className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" /> : <Sparkles aria-hidden="true" size={34} strokeWidth={1.2} className="text-brand-green-light/60" />}
-                    {service.categoria && <span className="absolute left-3 top-3 bg-white/95 px-3 py-1 text-xs font-medium text-brand-green">{service.categoria}</span>}
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="font-display text-xl font-semibold leading-6">{service.nombre}</h3>
-                      <span className="shrink-0 text-sm font-semibold text-brand-terracotta">{formatPrice(service.precio)}</span>
-                    </div>
-                    {service.descripcion && <p className="mt-2 line-clamp-2 text-sm leading-5 text-brand-text-light">{service.descripcion}</p>}
-                    {service.duracion && <p className="mt-4 flex items-center gap-2 text-xs text-brand-text-light"><Clock3 size={14} />{service.duracion} min</p>}
-                    <button type="button" aria-pressed={selectedServiceIds.includes(service.id)} onClick={() => toggleService(service.id)} className={`mt-4 inline-flex w-full items-center justify-center gap-2 border px-3 py-2 text-sm font-medium transition-colors ${selectedServiceIds.includes(service.id) ? "border-brand-green bg-brand-green text-white" : "border-brand-cream-dark text-brand-green hover:border-brand-green"}`}>
-                      {selectedServiceIds.includes(service.id) ? <Check size={16} /> : <Plus size={16} />}
-                      {selectedServiceIds.includes(service.id) ? "Agregado al pedido" : "Agregar al pedido"}
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
+          <div className="grid auto-rows-[220px] grid-cols-1 gap-3 sm:grid-cols-3">
+            {(showFullGallery ? galleryImages : galleryImages.slice(0, 3)).map((image, index) => (
+              <div key={image.src} className={`group relative overflow-hidden bg-brand-green/10 rounded-2xl`}>
+                <Image src={image} alt={`Essence Spa, detalle ${index + 1}`} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 25vw" className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+              </div>
+            ))}
           </div>
-        ) : (
-          <p className="mt-8 border-t border-brand-cream-dark py-8 text-sm text-brand-text-light">{services.length ? "No encontramos servicios con esos criterios." : "Los servicios se publicarán aquí próximamente."}</p>
-        )}
+          <button type="button" aria-expanded={showFullGallery} onClick={() => setShowFullGallery(!showFullGallery)} className="mt-6 min-h-11 rounded-full border border-brand-green/25 px-6 py-3 text-sm font-medium">{showFullGallery ? "Ver menos fotos" : "Conoce nuestro espacio"}</button>
+        </div>
       </section>
 
       {selectedServices.length > 0 && (
@@ -243,7 +247,7 @@ export default function PublicCatalog({ services, promotions, dataUnavailable }:
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand-green-light"><ShoppingBag size={15} /> Tu pedido</p>
+                  <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand-green-light"><ShoppingBag size={15} /> Tu selección</p>
                   <h2 id="order-title" className="mt-2 font-display text-2xl font-medium">{selectedServices.length} {selectedServices.length === 1 ? "servicio" : "servicios"}</h2>
                 </div>
                 <button type="button" onClick={() => setIsOrderPanelOpen(false)} aria-label="Cerrar detalle del pedido" className="p-1 text-brand-text-light transition-colors hover:text-brand-text">
@@ -263,8 +267,9 @@ export default function PublicCatalog({ services, promotions, dataUnavailable }:
               {selectedPromotion && <p className="mt-3 text-sm text-brand-text-light">Promo: {selectedPromotion.nombre} ({discount}%).</p>}
               {selectedPromotion && <p className="mt-4 text-right text-xs text-brand-text-light">Subtotal {formatPrice(subtotal)}</p>}
               <p className="mt-1 text-right text-lg font-semibold text-brand-terracotta">Total estimado: {formatPrice(total)}</p>
+              <p className="mt-3 text-xs leading-5 text-brand-text-light">Confirmaremos disponibilidad, promociones y total por WhatsApp.</p>
               <a href={whatsappUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex w-full items-center justify-center gap-2 bg-brand-green px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-green-dark">
-                <MessageCircle size={18} /> Pedir por WhatsApp <ArrowUpRight size={16} />
+                <MessageCircle size={18} /> Coordinar por WhatsApp <ArrowUpRight size={16} />
               </a>
             </section>
           )}
@@ -278,7 +283,7 @@ export default function PublicCatalog({ services, promotions, dataUnavailable }:
             <span className="flex min-w-0 items-center gap-3">
               <ShoppingBag size={20} className="shrink-0" />
               <span className="min-w-0">
-                <span className="block text-sm font-semibold">Ver pedido</span>
+                <span className="block text-sm font-semibold">Ver mi selección</span>
                 <span className="block truncate text-xs text-white/80">{selectedServices.length} {selectedServices.length === 1 ? "servicio" : "servicios"}</span>
               </span>
             </span>

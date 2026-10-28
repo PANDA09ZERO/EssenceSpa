@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+.public-catalog .text-brand-text-light { color: #62615d; }
+.public-catalog .text-brand-terracotta { color: #706255; }
+.public-catalog footer .text-brand-text-light { color: #d4cec7; }
+.public-catalog :is(a, button):focus-visible {
+  outline: 3px solid #a77d48;
+  outline-offset: 4px;
+}
+.public-catalog footer { padding-bottom: 100px; }
+
 @layer components {
   .bento-card {
     @apply bg-white rounded-bento shadow-bento p-6 transition-all duration-300 hover:shadow-bento-hover;
