@@ -11,6 +11,19 @@
 }
 .public-catalog footer { padding-bottom: 100px; }
 
+.dashboard-shell .text-brand-text-light { color: #68635c; }
+.dashboard-shell .bento-card,
+.dashboard-shell .bento-card-sm,
+.dashboard-shell .bento-card-lg {
+  border: 1px solid #e7e2d9;
+  box-shadow: 0 2px 8px rgb(26 26 26 / 2%);
+}
+.dashboard-shell :is(a, button, input, select, textarea):focus-visible {
+  outline: 3px solid #a77d48;
+  outline-offset: 3px;
+}
+.dashboard-shell .input-field { background: white; border-color: #d6d0c7; }
+
 @layer components {
   .bento-card {
     @apply bg-white rounded-bento shadow-bento p-6 transition-all duration-300 hover:shadow-bento-hover;

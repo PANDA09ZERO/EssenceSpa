@@ -4,30 +4,17 @@ import { useState } from "react";
 import { useSupabase } from "@/components/layout/SupabaseProvider";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import {
-  LayoutDashboard,
-  Calendar,
-  Users,
-  Sparkles,
-  Layers,
-  UserCog,
-  Tags,
-  Calculator,
-  FileText,
-  LogOut,
-  Menu,
-  X,
-} from "lucide-react";
+import { LayoutDashboard, Calendar, Users, Sparkles, Layers, UserCog, Tags, Calculator, FileText, LogOut, Menu, X, ArrowUpRight } from "lucide-react";
 
 const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Inicio" },
-  { href: "/dashboard/citas", icon: Calendar, label: "Citas" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Resumen" },
+  { href: "/dashboard/citas", icon: Calendar, label: "Agenda de citas" },
   { href: "/dashboard/clientes", icon: Users, label: "Clientes" },
   { href: "/dashboard/servicios", icon: Sparkles, label: "Servicios" },
   { href: "/dashboard/categorias", icon: Layers, label: "Categorías" },
-  { href: "/dashboard/empleados", icon: UserCog, label: "Empleados" },
+  { href: "/dashboard/empleados", icon: UserCog, label: "Equipo" },
   { href: "/dashboard/promociones", icon: Tags, label: "Promociones" },
-  { href: "/dashboard/caja", icon: Calculator, label: "Caja" },
+  { href: "/dashboard/caja", icon: Calculator, label: "Caja y cobros" },
   { href: "/dashboard/reportes", icon: FileText, label: "Reportes" },
 ];
 
@@ -36,100 +23,27 @@ export default function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const userName = user?.name?.trim() || user?.email?.split("@")[0] || "Usuario";
-  const roleLabels: Record<string, string> = {
-    admin: "Administrador",
-    recepcionista: "Recepción",
-    manicurista: "Especialista",
-    empleado: "Equipo",
-    cliente: "Cliente",
-  };
-  const userRole = user ? roleLabels[user.role] || user.role : "";
+  const roleLabels: Record<string, string> = { admin: "Administrador", recepcionista: "Recepción", manicurista: "Especialista", empleado: "Equipo", cliente: "Cliente" };
+  const isActive = (href: string) => pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
+  const current = navItems.find(item => isActive(item.href))?.label || "Panel de control";
+  const links = navItems.map((item, index) => <div key={item.href}>
+    {index === 0 && <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[.18em] text-stone-500">Tu espacio de trabajo</p>}
+    {index === 7 && <p className="mb-3 mt-7 px-3 text-[10px] font-semibold uppercase tracking-[.18em] text-stone-500">Administración</p>}
+    <Link href={item.href} onClick={() => setMobileMenuOpen(false)} aria-current={isActive(item.href) ? "page" : undefined} className={`mb-1 flex min-h-11 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors ${isActive(item.href) ? "bg-brand-green text-white shadow-sm" : "text-stone-600 hover:bg-stone-100 hover:text-stone-950"}`}><item.icon size={18} strokeWidth={1.6} />{item.label}</Link>
+  </div>);
 
-  const isActiveRoute = (href: string) =>
-    pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
-
-  return (
-    <header className="bg-white border-b border-brand-cream-dark sticky top-0 z-40">
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand-green flex items-center justify-center">
-            <i className="fas fa-spa text-white text-lg" />
-          </div>
-          <div className="hidden sm:block">
-            <h1 className="font-display font-bold text-brand-green text-lg">Essence Spa</h1>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden rounded-xl p-2 text-brand-green transition-colors hover:bg-brand-cream"
-            aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
-            aria-expanded={mobileMenuOpen}
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-          <div className="header-profile flex min-w-0 items-center gap-2 rounded-full border border-brand-green/10 bg-brand-cream/60 p-1.5 sm:gap-3 sm:pr-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-green font-display text-sm font-bold uppercase text-white ring-2 ring-white">
-              {userName.charAt(0)}
-            </div>
-            <div className="hidden min-w-0 sm:block">
-              <p className="max-w-36 truncate text-sm font-semibold leading-tight text-brand-text">{userName}</p>
-              <p className="mt-0.5 text-[11px] leading-tight text-brand-text-light">{userRole}</p>
-            </div>
-            <button onClick={signOut} className="rounded-full p-2 text-brand-text-light transition-colors hover:bg-red-50 hover:text-red-600" title="Cerrar sesión" aria-label="Cerrar sesión">
-              <LogOut size={20} />
-            </button>
-          </div>
-        </div>
+  return <>
+    <aside aria-label="Barra lateral" className="fixed inset-y-0 left-0 z-40 hidden w-60 flex-col border-r border-stone-200 bg-[#FCFBF8] lg:flex">
+      <Link href="/dashboard" className="flex items-center gap-3 px-6 py-8"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-green text-white"><Sparkles size={20} strokeWidth={1.3} /></span><span><span className="block font-display text-xl">Essence Spa</span><span className="text-[10px] uppercase tracking-[.2em] text-stone-500">Panel de gestión</span></span></Link>
+      <nav aria-label="Navegación principal" className="flex-1 overflow-y-auto px-4 py-3">{links}</nav>
+      <div className="m-4 rounded-2xl border border-stone-200 bg-white p-4"><p className="font-display text-lg">Tu vitrina digital</p><p className="mt-1 text-xs leading-5 text-stone-500">Así ven tus clientes los servicios de Essence.</p><Link href="/" target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-11 items-center gap-2 text-xs font-semibold">Ver página pública <ArrowUpRight size={15} /></Link></div>
+    </aside>
+    <header className="sticky top-0 z-30 border-b border-stone-200/80 bg-[#FCFBF8]/95 backdrop-blur lg:ml-60">
+      <div className="flex min-h-20 items-center justify-between gap-3 px-4 sm:px-8">
+        <div className="flex min-w-0 items-center gap-3"><button type="button" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"} aria-controls="dashboard-mobile-nav" aria-expanded={mobileMenuOpen} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-stone-200 lg:hidden">{mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}</button><div><p className="text-[10px] uppercase tracking-[.15em] text-stone-500">Essence / Gestión</p><p className="truncate text-sm font-medium">{current}</p></div></div>
+        <div className="flex items-center gap-3"><div className="hidden text-right sm:block"><p className="max-w-40 truncate text-sm font-medium">{userName}</p><p className="text-xs text-stone-500">{user ? roleLabels[user.role] || user.role : "Cargando sesión…"}</p></div><span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e9e3d9] text-sm font-semibold uppercase">{userName.charAt(0)}</span><button type="button" onClick={signOut} aria-label="Cerrar sesión" title="Cerrar sesión" className="flex h-11 w-11 items-center justify-center rounded-xl text-stone-500 transition-colors hover:bg-red-50 hover:text-red-700"><LogOut size={18} /></button></div>
       </div>
-
-      <nav className="hidden lg:flex items-center gap-1 px-4 pb-2 overflow-x-auto scrollbar-hide">
-        {navItems.map((item) => {
-          const isActive = isActiveRoute(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={isActive ? "page" : undefined}
-              className={`header-nav-link group relative flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
-                isActive ? "header-nav-active bg-brand-green text-white shadow-bento" : "text-brand-text hover:-translate-y-0.5 hover:bg-brand-cream"
-              }`}
-            >
-              <item.icon size={18} />
-              {item.label}
-              <span aria-hidden="true" className={`header-nav-indicator absolute inset-x-3 bottom-0 h-0.5 origin-center rounded-full bg-brand-gold transition-transform duration-200 ${isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`} />
-            </Link>
-          );
-        })}
-      </nav>
-
-      {mobileMenuOpen && (
-        <nav aria-label="Navegación principal" className="header-mobile-menu lg:hidden border-t border-brand-cream-dark pb-4 px-2">
-          <div className="grid grid-cols-3 gap-1">
-            {navItems.map((item) => {
-              const isActive = isActiveRoute(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  aria-current={isActive ? "page" : undefined}
-                  className={`header-nav-link flex flex-col items-center gap-1 rounded-xl px-3 py-3 text-xs font-medium transition-all duration-200 ${
-                    isActive ? "header-nav-active bg-brand-green text-white" : "text-brand-text hover:bg-brand-cream"
-                  }`}
-                >
-                  <item.icon size={20} />
-                  {item.label}
-                </Link>
-              );
-            })}
-            <button onClick={signOut} className="flex flex-col items-center gap-1 rounded-xl px-3 py-3 text-xs font-medium text-red-500 transition-colors hover:bg-red-50">
-              <LogOut size={20} /> Salir
-            </button>
-          </div>
-        </nav>
-      )}
+      {mobileMenuOpen && <nav id="dashboard-mobile-nav" aria-label="Navegación principal móvil" className="max-h-[65vh] overflow-y-auto border-t border-stone-200 bg-[#FCFBF8] p-4 lg:hidden">{links}<Link href="/" className="block px-3 py-3 text-sm underline">Ver página pública</Link></nav>}
     </header>
-  );
+  </>;
 }

@@ -8,8 +8,6 @@ import {
   Users,
   Sparkles,
   Calculator,
-  Menu,
-  Plus,
 } from "lucide-react";
 
 const items = [
@@ -24,15 +22,16 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-brand-cream-dark z-50 safe-area-inset-bottom">
+    <nav aria-label="Accesos principales" className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 z-50 pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around py-2 px-1">
         {items.map((item) => {
-          const isActive = pathname === item.href || (pathname.startsWith("/dashboard") && item.href === "/dashboard");
+          const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`));
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`nav-bottom-item flex-1 justify-center ${isActive ? "active" : ""}`}
+              aria-current={isActive ? "page" : undefined}
+              className={`flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl transition-colors ${isActive ? "bg-stone-100 text-stone-950" : "text-stone-500 hover:bg-stone-50"}`}
             >
               <item.icon size={22} />
               <span className="text-[10px] font-medium">{item.label}</span>
