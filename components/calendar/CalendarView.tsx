@@ -11,13 +11,17 @@ import { citaDurationMinutes, citaServiceNames, estadoLabels, fullName, statusBa
 
 export type { Appointment };
 
-interface Props { appointments: Appointment[]; onUpdated?: () => void; }
+interface Props { appointments: Appointment[]; onUpdated?: () => void; focusDate?: string | null; }
 
-export default function CalendarView({ appointments, onUpdated }: Props) {
+export default function CalendarView({ appointments, onUpdated, focusDate }: Props) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [selectedCitaId, setSelectedCitaId] = useState<string | null>(null);
   const [editingCita, setEditingCita] = useState<Appointment | null>(null);
+
+  useEffect(() => {
+    if (focusDate) setCurrentDate(new Date(`${focusDate}T12:00:00`));
+  }, [focusDate]);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
