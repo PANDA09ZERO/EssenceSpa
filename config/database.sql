@@ -121,6 +121,14 @@ CREATE TABLE pagos (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE pago_adicionales (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  id_pago UUID NOT NULL REFERENCES pagos(id) ON DELETE CASCADE,
+  concepto TEXT NOT NULL CHECK (char_length(btrim(concepto)) BETWEEN 1 AND 120),
+  monto DECIMAL(10,2) NOT NULL CHECK (monto > 0),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ============================================
 -- TABLE: movimientos_caja
 -- ============================================
@@ -175,6 +183,10 @@ CREATE POLICY "Todos pueden eliminar clientes" ON clientes FOR DELETE USING (tru
 ALTER TABLE pagos ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Todos pueden ver pagos" ON pagos FOR SELECT USING (true);
 CREATE POLICY "Todos pueden insertar pagos" ON pagos FOR INSERT WITH CHECK (true);
+
+ALTER TABLE pago_adicionales ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Todos pueden ver adicionales de pagos" ON pago_adicionales FOR SELECT USING (true);
+CREATE POLICY "Todos pueden insertar adicionales de pagos" ON pago_adicionales FOR INSERT WITH CHECK (true);
 
 ALTER TABLE movimientos_caja ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Todos pueden ver movimientos" ON movimientos_caja FOR SELECT USING (true);
@@ -283,19 +295,25 @@ CREATE TRIGGER trigger_configuracion_updated BEFORE UPDATE ON configuracion FOR 
 -- ============================================
 -- FUNCTION: cobrar una cita con descuento
 -- ============================================
+DROP FUNCTION IF EXISTS cobrar_cita(UUID, TEXT, DECIMAL, TEXT, UUID, TEXT);
 CREATE OR REPLACE FUNCTION cobrar_cita(
   p_id_cita UUID,
   p_metodo_pago TEXT,
   p_descuento_manual DECIMAL DEFAULT 0,
   p_tipo_descuento TEXT DEFAULT 'monto_fijo',
   p_id_promocion UUID DEFAULT NULL,
-  p_observaciones TEXT DEFAULT NULL
+  p_observaciones TEXT DEFAULT NULL,
+  p_adicionales JSONB DEFAULT '[]'::jsonb
 )
 RETURNS JSONB
 LANGUAGE plpgsql
 AS $$
 DECLARE
   v_cita citas%ROWTYPE;
+  v_adicional JSONB;
+  v_adicional_monto DECIMAL(10,2);
+  v_subtotal_cita DECIMAL(10,2);
+  v_subtotal_adicionales DECIMAL(10,2) := 0;
   v_subtotal DECIMAL(10,2);
   v_descuento DECIMAL(10,2) := 0;
   v_total DECIMAL(10,2);
@@ -308,8 +326,23 @@ BEGIN
     RAISE EXCEPTION 'La cita ya tiene un pago registrado';
   END IF;
 
-  v_subtotal := COALESCE(v_cita.total, 0);
-  IF v_subtotal <= 0 THEN RAISE EXCEPTION 'La cita no tiene un importe válido'; END IF;
+  v_subtotal_cita := COALESCE(v_cita.total, 0);
+  IF v_subtotal_cita <= 0 THEN RAISE EXCEPTION 'La cita no tiene un importe válido'; END IF;
+  IF jsonb_typeof(COALESCE(p_adicionales, '[]'::jsonb)) <> 'array' THEN RAISE EXCEPTION 'Los adicionales no son válidos'; END IF;
+  IF jsonb_array_length(COALESCE(p_adicionales, '[]'::jsonb)) > 20 THEN RAISE EXCEPTION 'No se permiten más de 20 adicionales'; END IF;
+  FOR v_adicional IN SELECT value FROM jsonb_array_elements(COALESCE(p_adicionales, '[]'::jsonb))
+  LOOP
+    IF jsonb_typeof(v_adicional) <> 'object'
+      OR NULLIF(BTRIM(v_adicional->>'concepto'), '') IS NULL
+      OR char_length(BTRIM(v_adicional->>'concepto')) > 120
+      OR COALESCE(v_adicional->>'monto', '') !~ '^[0-9]+([.][0-9]{1,2})?$' THEN
+      RAISE EXCEPTION 'Cada adicional debe tener un concepto y un monto válido';
+    END IF;
+    v_adicional_monto := (v_adicional->>'monto')::DECIMAL(10,2);
+    IF v_adicional_monto <= 0 THEN RAISE EXCEPTION 'El monto de cada adicional debe ser mayor a cero'; END IF;
+    v_subtotal_adicionales := v_subtotal_adicionales + v_adicional_monto;
+  END LOOP;
+  v_subtotal := v_subtotal_cita + v_subtotal_adicionales;
 
   IF p_id_promocion IS NOT NULL THEN
     SELECT * INTO v_promocion FROM promociones
@@ -317,20 +350,25 @@ BEGIN
       AND (fecha_inicio IS NULL OR fecha_inicio <= CURRENT_DATE)
       AND (fecha_fin IS NULL OR fecha_fin >= CURRENT_DATE);
     IF NOT FOUND THEN RAISE EXCEPTION 'La promoción no está vigente'; END IF;
-    v_descuento := v_subtotal * (v_promocion.descuento / 100);
+    v_descuento := v_subtotal_cita * (v_promocion.descuento / 100);
   END IF;
 
   IF p_descuento_manual > 0 THEN
-    IF p_tipo_descuento = 'porcentaje' THEN v_descuento := v_descuento + (v_subtotal * p_descuento_manual / 100);
+    IF p_tipo_descuento = 'porcentaje' THEN v_descuento := v_descuento + (v_subtotal_cita * p_descuento_manual / 100);
     ELSE v_descuento := v_descuento + p_descuento_manual;
     END IF;
   END IF;
-  IF v_descuento > v_subtotal THEN RAISE EXCEPTION 'El descuento no puede superar el subtotal'; END IF;
+  IF v_descuento > v_subtotal_cita THEN RAISE EXCEPTION 'El descuento no puede superar el precio de la cita'; END IF;
   v_total := ROUND(v_subtotal - v_descuento, 2);
 
   INSERT INTO pagos (id_cita, id_cliente, id_promocion, subtotal, descuento, tipo_descuento, total, metodo_pago, observaciones)
   VALUES (p_id_cita, v_cita.id_cliente, p_id_promocion, v_subtotal, v_descuento, p_tipo_descuento, v_total, p_metodo_pago, p_observaciones)
   RETURNING * INTO v_pago;
+  FOR v_adicional IN SELECT value FROM jsonb_array_elements(COALESCE(p_adicionales, '[]'::jsonb))
+  LOOP
+    INSERT INTO pago_adicionales (id_pago, concepto, monto)
+    VALUES (v_pago.id, BTRIM(v_adicional->>'concepto'), (v_adicional->>'monto')::DECIMAL(10,2));
+  END LOOP;
   INSERT INTO movimientos_caja (tipo, concepto, monto, metodo_pago, id_pago, observaciones)
   VALUES ('ingreso', 'Cobro de cita', v_total, p_metodo_pago, v_pago.id, p_observaciones);
   UPDATE citas SET estado = 'completada' WHERE id = p_id_cita;
