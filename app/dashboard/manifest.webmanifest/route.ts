@@ -12,6 +12,7 @@ export function GET() {
     display: "standalone",
     background_color: "#F5F3EE",
     theme_color: "#1A1A1A",
+    related_applications: [{ platform: "webapp", url: "/dashboard/manifest.webmanifest", id: "/dashboard" }],
     icons: [
       { src: "/system-icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
       { src: "/system-icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
