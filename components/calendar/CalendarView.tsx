@@ -26,6 +26,7 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const days = eachDayOfInterval({ start: startOfMonth(currentDate), end: endOfMonth(currentDate) });
+  const leadingDays = (startOfMonth(currentDate).getDay() + 6) % 7;
   const appointmentsByDate = [...appointments].sort(compareCitaSchedule).reduce<Record<string, Appointment[]>>((result, appointment) => {
     (result[appointment.fecha] ||= []).push(appointment);
     return result;
@@ -63,6 +64,7 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
         </div>
         <div className="grid grid-cols-7 gap-px bg-brand-cream p-px">
           {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => <div key={day} className="bg-white text-center text-xs font-medium text-brand-text-light py-2">{day}</div>)}
+          {Array.from({ length: leadingDays }, (_, index) => <div key={`empty-${index}`} className="bg-white min-h-[80px]" />)}
           {days.map((day) => {
             const key = format(day, "yyyy-MM-dd");
             const apps = appointmentsByDate[key] || [];
