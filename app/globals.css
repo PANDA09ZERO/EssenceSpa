@@ -132,11 +132,11 @@
   }
 
   .clock-face-small {
-    @apply relative flex h-36 w-36 items-center justify-center rounded-full bg-brand-cream-light;
+    @apply relative isolate aspect-square w-full max-w-60 rounded-full bg-brand-cream-light;
   }
 
   .clock-number-small {
-    @apply absolute left-1/2 top-1/2 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-xs font-semibold transition-all;
+    @apply absolute z-10 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-sm font-semibold transition-colors;
   }
 
   .clock-number-small.selected {
@@ -144,11 +144,11 @@
   }
 
   .clock-hand-small {
-    @apply absolute bottom-1/2 left-1/2 h-12 w-0.5 origin-bottom bg-brand-green;
+    @apply pointer-events-none absolute bottom-1/2 left-1/2 h-[37.5%] w-0.5 origin-bottom bg-brand-green;
   }
 
   .clock-dot-small {
-    @apply absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-green;
+    @apply pointer-events-none absolute left-1/2 top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-green;
   }
 }
 
