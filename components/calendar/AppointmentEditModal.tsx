@@ -1,4 +1,5 @@
 "use client";
+import { formatTime } from "@/lib/utils";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Save, Trash2, X } from "lucide-react";
@@ -116,10 +117,10 @@ export default function AppointmentEditModal({ cita, onClose, onSaved }: Props) 
 
           <div className="grid grid-cols-2 gap-3">
             <div><label className="label-field">Fecha *</label><input type="date" required className="input-field" value={fecha} onChange={(event) => setFecha(event.target.value)} /></div>
-            <div><label className="label-field">Hora de inicio *</label><input type="time" required className="input-field" value={hora} onChange={(event) => setHora(event.target.value)} /></div>
+            <div><label className="label-field">Hora de inicio *</label><input type="time" required className="input-field" value={hora} onChange={(event) => setHora(event.target.value)} />{hora && <p className="mt-2 text-xs text-brand-text-light">{formatTime(hora)}</p>}</div>
           </div>
 
-          {duration > 0 && <div className="flex items-center justify-between rounded-2xl bg-brand-green/10 px-4 py-3 text-sm"><span className="text-brand-text-light">Duración: <strong className="text-brand-green">{duration} min</strong></span><span className="font-bold text-brand-green">{endTime && `hasta las ${endTime}`}</span></div>}
+          {duration > 0 && <div className="flex items-center justify-between rounded-2xl bg-brand-green/10 px-4 py-3 text-sm"><span className="text-brand-text-light">Duración: <strong className="text-brand-green">{duration} min</strong></span><span className="font-bold text-brand-green">{endTime && `hasta las ${formatTime(endTime)}`}</span></div>}
 
           <div className="grid grid-cols-2 gap-3">
             <div>

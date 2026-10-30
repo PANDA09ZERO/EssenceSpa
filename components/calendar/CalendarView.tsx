@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { eachDayOfInterval, endOfMonth, format, isToday, startOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Clock, Eye, Pencil, Scissors, User, UserRound, X } from "lucide-react";
+import { formatTime } from "@/lib/utils";
 import AppointmentEditModal from "./AppointmentEditModal";
 import type { Appointment } from "./types";
-import { citaDurationMinutes, citaServiceNames, estadoLabels, fullName, statusBadges, statusColors } from "./cita-utils";
+import { citaDurationMinutes, citaServiceNames, estadoLabels, fullName, statusBadges, statusColors, compareCitaSchedule } from "./cita-utils";
 
 export type { Appointment };
 
@@ -21,12 +22,12 @@ export default function CalendarView({ appointments, onUpdated }: Props) {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const days = eachDayOfInterval({ start: startOfMonth(currentDate), end: endOfMonth(currentDate) });
-  const appointmentsByDate = appointments.reduce<Record<string, Appointment[]>>((result, appointment) => {
+  const appointmentsByDate = [...appointments].sort(compareCitaSchedule).reduce<Record<string, Appointment[]>>((result, appointment) => {
     (result[appointment.fecha] ||= []).push(appointment);
     return result;
   }, {});
 
-  const dayCitas = selectedDay ? [...(appointmentsByDate[selectedDay] || [])].sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio)) : [];
+  const dayCitas = selectedDay ? (appointmentsByDate[selectedDay] || []) : [];
   const selectedCita = selectedCitaId ? appointments.find((cita) => cita.id === selectedCitaId) || null : null;
   // Detalle solo si la cita sigue en el día seleccionado (si cambió de fecha
   // al editar, se vuelve a la lista del día).
@@ -80,8 +81,8 @@ export default function CalendarView({ appointments, onUpdated }: Props) {
                       type="button"
                       onClick={() => openCita(key, app.id)}
                       className={`w-2.5 h-2.5 rounded-full transition-transform hover:scale-150 ${statusColors[app.estado] || "bg-gray-400"}`}
-                      title={`${app.hora_inicio} · ${fullName(app.clientes) || "Cliente"} · ${citaServiceNames(app).join(", ")}`}
-                      aria-label={`Ver cita de ${fullName(app.clientes) || "cliente"} a las ${app.hora_inicio}`}
+                      title={`${formatTime(app.hora_inicio)} · ${fullName(app.clientes) || "Cliente"} · ${citaServiceNames(app).join(", ")}`}
+                      aria-label={`Ver cita de ${fullName(app.clientes) || "cliente"} a las ${formatTime(app.hora_inicio)}`}
                     />
                   ))}
                   {apps.length > 3 && (
@@ -94,7 +95,7 @@ export default function CalendarView({ appointments, onUpdated }: Props) {
         </div>
       </div>
       {selectedDay && (
-        <div className="fixed inset-0 bg-brand-green/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Citas del día" onClick={closeDayModal}>
+        <div className="fixed inset-0 bg-brand-green/40 backdrop-blur-sm z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Citas del día" onClick={closeDayModal}>
           <div className="bg-white rounded-3xl shadow-bento w-full max-w-2xl max-h-[92vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
             <div className="p-6 bg-gradient-to-r from-brand-green to-brand-green-dark text-white flex items-start justify-between gap-4">
               <div className="min-w-0">
@@ -114,9 +115,9 @@ export default function CalendarView({ appointments, onUpdated }: Props) {
                 {dayCitas.length === 0 && <p className="text-sm text-brand-text-light">No hay citas programadas para este día.</p>}
                 {dayCitas.map((cita) => (
                   <button key={cita.id} type="button" onClick={() => setSelectedCitaId(cita.id)} className="w-full text-left p-4 rounded-2xl bg-brand-cream hover:bg-brand-green/10 transition-colors flex items-center gap-4">
-                    <div className="w-16 shrink-0 text-center">
-                      <p className="font-display font-bold text-brand-green">{cita.hora_inicio}</p>
-                      <p className="text-[11px] text-brand-text-light">{cita.hora_fin ? cita.hora_fin : `${citaDurationMinutes(cita)} min`}</p>
+                    <div className="w-20 shrink-0 text-center">
+                      <p className="font-display font-bold text-brand-green">{formatTime(cita.hora_inicio)}</p>
+                      <p className="text-[11px] text-brand-text-light">{cita.hora_fin ? formatTime(cita.hora_fin) : `${citaDurationMinutes(cita)} min`}</p>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -150,8 +151,8 @@ export default function CalendarView({ appointments, onUpdated }: Props) {
                     { icon: Scissors, label: "Servicio", value: citaServiceNames(detailCita).join(", ") || "Sin servicio registrado" },
                     { icon: UserRound, label: "Trabajador", value: fullName(detailCita.empleados) || "Sin trabajador asignado" },
                     { icon: CalendarDays, label: "Fecha", value: format(new Date(`${detailCita.fecha}T12:00:00`), "d 'de' MMMM yyyy", { locale: es }) },
-                    { icon: Clock, label: "Hora de inicio", value: detailCita.hora_inicio },
-                    { icon: Clock, label: "Hora de finalización", value: detailCita.hora_fin ? `${detailCita.hora_fin} · ${citaDurationMinutes(detailCita)} min` : citaDurationMinutes(detailCita) > 0 ? `${citaDurationMinutes(detailCita)} min de duración` : "Por confirmar" },
+                    { icon: Clock, label: "Hora de inicio", value: formatTime(detailCita.hora_inicio) },
+                    { icon: Clock, label: "Hora de finalización", value: detailCita.hora_fin ? `${formatTime(detailCita.hora_fin)} · ${citaDurationMinutes(detailCita)} min` : citaDurationMinutes(detailCita) > 0 ? `${citaDurationMinutes(detailCita)} min de duración` : "Por confirmar" },
                   ].map((row) => (
                     <div key={row.label} className="flex items-start gap-3 p-3 rounded-2xl bg-brand-cream">
                       <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-brand-green shrink-0"><row.icon size={16} /></div>

@@ -37,6 +37,15 @@ function toMinutes(hhmm: string | null | undefined): number | null {
   return Number.isFinite(hours) && Number.isFinite(minutes) ? hours * 60 + minutes : null;
 }
 
+// Compare stored 24-hour values, never their 12-hour display labels.
+export function compareCitaSchedule(
+  a: { fecha: string; hora_inicio: string },
+  b: { fecha: string; hora_inicio: string },
+): number {
+  return a.fecha.localeCompare(b.fecha) ||
+    (toMinutes(a.hora_inicio) ?? Infinity) - (toMinutes(b.hora_inicio) ?? Infinity);
+}
+
 // Nombres de los servicios de una cita (detalles o servicio principal).
 export function citaServiceNames(cita: Appointment): string[] {
   const names = (cita.cita_detalles || [])
