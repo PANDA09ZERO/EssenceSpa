@@ -51,7 +51,13 @@ export default function InstallSystem() {
     let active = true;
     let finishTimer: number | undefined;
 
-    const syncDisplay = () => setInstalled(isStandalone() || readInstalledFlag());
+    const syncDisplay = () => {
+      const standaloneNow = isStandalone();
+      // En iPhone no existe getInstalledRelatedApps: al abrir la app instalada
+      // guardamos la marca para no volver a pedir la instalación desde Safari.
+      if (standaloneNow) saveInstalledFlag();
+      setInstalled(standaloneNow || readInstalledFlag());
+    };
     const finish = () => {
       if (!active) return;
       setReady(true);
