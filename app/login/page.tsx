@@ -17,6 +17,9 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      // End only this browser's previous session before switching accounts.
+      const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
+      if (signOutError) throw new Error("No se pudo cerrar la sesión anterior. Vuelve a intentarlo.");
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -28,16 +31,23 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      const { session } = result.data;
-      if (session) {
-        await supabase.auth.setSession({
+      const { session, user } = result.data || {};
+      const expectedEmail = email.trim().toLowerCase();
+      if (!session?.access_token || !session?.refresh_token || !user?.id || user.email?.toLowerCase() !== expectedEmail) {
+        throw new Error("No se pudo validar la cuenta. Inicia sesión nuevamente.");
+      }
+      const { data: saved, error: sessionError } = await supabase.auth.setSession({
           access_token: session.access_token,
           refresh_token: session.refresh_token,
-        });
+      });
+      if (sessionError || !saved.user || saved.user.id !== user.id || saved.user.email?.toLowerCase() !== expectedEmail) {
+        await supabase.auth.signOut({ scope: "local" });
+        throw new Error("No se pudo activar tu sesión. Vuelve a intentarlo.");
       }
       router.replace("/dashboard");
-    } catch {
-      setError("Error al iniciar sesión");
+      router.refresh();
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "Error al iniciar sesión");
     } finally {
       setLoading(false);
     }

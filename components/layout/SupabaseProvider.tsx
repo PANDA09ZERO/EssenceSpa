@@ -36,48 +36,35 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const signingOutRef = useRef(false);
 
   useEffect(() => {
-    const getSession = async () => {
-      try {
-        const result = await Promise.race([
-          supabase.auth.getSession(),
-          new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Supabase tardó demasiado")), 8000)),
-        ]);
-        const session = result.data.session;
-        if (session?.user) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email || "",
-            role: (session.user.user_metadata as any)?.role || "cliente",
-            name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "",
-          });
-        }
-      } catch (error) {
-        console.error("No se pudo recuperar la sesión de Supabase", error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    getSession();
-
+    let active = true;
+    const timeout = setTimeout(() => {
+      if (active) { setUser(null); setLoading(false); }
+    }, 8000);
+    // INITIAL_SESSION and subsequent auth events are the single source of truth.
+    // A separate getSession promise can otherwise overwrite a newer SIGNED_IN.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
+      if (!active) return;
+      clearTimeout(timeout);
+      const sessionUser = session?.user;
+      if (sessionUser) {
         signingOutRef.current = false;
         setUser({
-          id: session.user.id,
-          email: session.user.email || "",
-          role: (session.user.user_metadata as any)?.role || "cliente",
-          name: session.user.user_metadata?.name || session.user.email?.split("@")[0] || "",
+          id: sessionUser.id,
+          email: sessionUser.email || "",
+          role: sessionUser.user_metadata?.role || "cliente",
+          name: sessionUser.user_metadata?.name || sessionUser.email?.split("@")[0] || "",
         });
-      } else {
-        setUser(null);
-        // Solo una sesión expirada (no un logout explícito) vuelve al login.
-        if (!signingOutRef.current && pathname.startsWith("/dashboard")) router.replace("/login");
-      }
+      } else { setUser(null); }
+      setLoading(false);
     });
+    return () => { active = false; clearTimeout(timeout); subscription.unsubscribe(); };
+  }, []);
 
-    return () => subscription.unsubscribe();
-  }, [pathname, router]);
+  useEffect(() => {
+    if (!loading && !user && !signingOutRef.current && pathname.startsWith("/dashboard")) {
+      router.replace("/login");
+    }
+  }, [loading, user, pathname, router]);
 
   const signOut = async () => {
     signingOutRef.current = true;
