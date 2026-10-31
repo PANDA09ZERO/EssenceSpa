@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSupabase } from "@/components/layout/SupabaseProvider";
 import {
   LayoutDashboard,
   Calendar,
@@ -20,11 +21,14 @@ const items = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const { user } = useSupabase();
+  const canManageCaja = user?.role === "admin" || user?.role === "recepcionista";
+  const visibleItems = items.filter(item => item.href !== "/dashboard/caja" || canManageCaja);
 
   return (
     <nav aria-label="Accesos principales" className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 z-50 pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around py-2 px-1">
-        {items.map((item) => {
+        {visibleItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`));
           return (
             <Link

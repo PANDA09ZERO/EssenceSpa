@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { authorizeEmployeeRequest } from "@/lib/employee-api-auth";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+const CAJA_ROLES = ["admin", "recepcionista"];
+const CAJA_DENIED = "Solo administración y recepción pueden gestionar la caja";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await authorizeEmployeeRequest(request, { roles: CAJA_ROLES, message: CAJA_DENIED });
+  if (denied) return denied;
+  const supabase = createSupabaseAdminClient();
   const [{ data: movimientos, error: movimientosError }, { data: citas, error: citasError }, { data: promociones, error: promocionesError }, { data: pagos, error: pagosError }] = await Promise.all([
     supabase.from("movimientos_caja").select("*").order("created_at", { ascending: false }),
     supabase.from("citas").select("id, id_cliente, id_servicio, fecha, hora_inicio, total, estado, clientes(nombre, apellido), servicios(nombre, precio)").in("estado", ["pendiente", "confirmada", "completada"]).order("fecha", { ascending: true }),
@@ -45,6 +50,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await authorizeEmployeeRequest(request, { roles: CAJA_ROLES, message: CAJA_DENIED });
+  if (denied) return denied;
+  const supabase = createSupabaseAdminClient();
   let body: Record<string, unknown>;
   try {
     body = await request.json();

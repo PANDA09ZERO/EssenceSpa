@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
 import { ArrowDownCircle, ArrowUpCircle, Calculator, ChevronRight, Plus, Wallet, X } from "lucide-react";
 import StatsCard from "@/components/bento/StatCard";
+import { useSupabase } from "@/components/layout/SupabaseProvider";
 
 interface Adicional { id: string; concepto: string; monto: string; }
 interface PagoDetalle {
@@ -111,6 +112,8 @@ function DetalleMovimientoModal({ movimiento, onClose }: { movimiento: Movimient
 }
 
 export default function CajaPage() {
+  const { supabase, user, loading: sessionLoading, roleLoading } = useSupabase();
+  const canManage = user?.role === "admin" || user?.role === "recepcionista";
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [citas, setCitas] = useState<Cita[]>([]);
   const [promociones, setPromociones] = useState<Promocion[]>([]);
@@ -124,16 +127,24 @@ export default function CajaPage() {
   const [egreso, setEgreso] = useState({ concepto: "", monto: "", metodo_pago: "efectivo" });
   const [message, setMessage] = useState("");
 
-  const loadCaja = async () => {
-    const response = await fetch("/api/caja");
+  const getAuthHeaders = useCallback(async (): Promise<Record<string, string>> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
+  }, [supabase]);
+
+  const loadCaja = useCallback(async () => {
+    const response = await fetch("/api/caja", { headers: await getAuthHeaders(), cache: "no-store" });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "No se pudo cargar caja");
     setMovimientos(result.movimientos || []);
     setCitas((result.citas || []).filter((cita: Cita) => cita.total > 0));
     setPromociones(result.promociones || []);
-  };
+  }, [getAuthHeaders]);
 
-  useEffect(() => { loadCaja().catch((error) => setMessage(error.message)); }, []);
+  useEffect(() => {
+    if (!canManage) return;
+    loadCaja().catch((error) => setMessage(error.message));
+  }, [canManage, loadCaja]);
   useEffect(() => {
     const citaId = new URLSearchParams(window.location.search).get("cita");
     if (citaId) setSelectedCita(citaId);
@@ -159,7 +170,7 @@ export default function CajaPage() {
     if (!selectedCita) return setMessage("Selecciona una cita pendiente de pago");
     if (adicionales.some((item) => !item.concepto.trim() || !Number.isFinite(Number(item.monto)) || Number(item.monto) <= 0)) return setMessage("Completa el concepto y un monto mayor a cero para cada adicional");
     if (totalDescuentos > Number(cita?.total || 0)) return setMessage("El descuento no puede superar el precio de la cita");
-    const response = await fetch("/api/caja", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id_cita: selectedCita, metodo_pago: metodo, descuento_manual: Number(descuento), tipo_descuento: tipoDescuento, id_promocion: promocion || null, adicionales: adicionales.map(({ concepto, monto }) => ({ concepto: concepto.trim(), monto: Number(monto) })) }) });
+    const response = await fetch("/api/caja", { method: "POST", headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) }, body: JSON.stringify({ id_cita: selectedCita, metodo_pago: metodo, descuento_manual: Number(descuento), tipo_descuento: tipoDescuento, id_promocion: promocion || null, adicionales: adicionales.map(({ concepto, monto }) => ({ concepto: concepto.trim(), monto: Number(monto) })) }) });
     const result = await response.json();
     if (!response.ok) return setMessage(result.error || "No se pudo registrar el cobro");
     setMessage(`Cobro registrado: ${formatoMoneda(result.data.total)}`);
@@ -168,11 +179,14 @@ export default function CajaPage() {
 
   const registrarEgreso = async (event: FormEvent) => {
     event.preventDefault();
-    const response = await fetch("/api/caja", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tipo: "egreso", ...egreso }) });
+    const response = await fetch("/api/caja", { method: "POST", headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) }, body: JSON.stringify({ tipo: "egreso", ...egreso }) });
     const result = await response.json();
     if (!response.ok) return setMessage(result.error || "No se pudo registrar el egreso");
     setMessage("Egreso registrado"); setEgreso({ concepto: "", monto: "", metodo_pago: "efectivo" }); await loadCaja();
   };
+
+  if (sessionLoading || roleLoading) return <div className="bento-card text-sm text-brand-text-light">Verificando permisos…</div>;
+  if (!canManage) return <div className="bento-card"><h1 className="font-display text-3xl font-bold text-brand-green">Caja</h1><p className="mt-2 text-sm leading-6 text-brand-text-light">Tu rol no tiene permiso para cobrar ni registrar movimientos. Pide a un administrador que te asigne el rol de recepción.</p></div>;
 
   return <div className="space-y-6">
     <div><h1 className="font-display text-3xl font-bold text-brand-green">Caja</h1><p className="text-brand-text-light mt-1">Cobra citas y controla ingresos y egresos</p></div>

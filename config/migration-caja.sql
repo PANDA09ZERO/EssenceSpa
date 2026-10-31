@@ -1,4 +1,6 @@
 -- Ejecutar después del esquema base en Supabase.
+-- Nota: este archivo ya fue aplicado. Los permisos definitivos de caja están
+-- en migration-caja-permisos.sql (solo el servidor accede a las tablas de dinero).
 ALTER TABLE citas ADD COLUMN IF NOT EXISTS id_servicio UUID REFERENCES servicios(id) ON DELETE SET NULL;
 
 CREATE TABLE IF NOT EXISTS cita_detalles (
@@ -71,7 +73,7 @@ CREATE POLICY "Todos pueden ver pagos" ON pagos FOR SELECT USING (true);
 CREATE POLICY "Todos pueden insertar pagos" ON pagos FOR INSERT WITH CHECK (true);
 CREATE POLICY "Todos pueden ver adicionales de pagos" ON pago_adicionales FOR SELECT USING (true);
 CREATE POLICY "Todos pueden insertar adicionales de pagos" ON pago_adicionales FOR INSERT WITH CHECK (true);
-GRANT SELECT, INSERT ON pago_adicionales TO anon, authenticated;
+GRANT SELECT, INSERT ON pago_adicionales TO service_role;
 CREATE POLICY "Todos pueden ver movimientos" ON movimientos_caja FOR SELECT USING (true);
 CREATE POLICY "Todos pueden insertar movimientos" ON movimientos_caja FOR INSERT WITH CHECK (true);
 

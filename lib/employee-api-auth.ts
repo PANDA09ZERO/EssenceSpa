@@ -7,41 +7,54 @@ const supabase = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } },
 );
 
-function decodeJWT(token: string): Record<string, unknown> | null {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-    const payload = parts[1];
-    const decoded = Buffer.from(payload.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf-8");
-    return JSON.parse(decoded);
-  } catch {
-    return null;
-  }
+interface EmployeeRoleOptions {
+  roles?: string[];
+  message?: string;
 }
 
-export async function authorizeAdminEmployeeRequest(request: NextRequest) {
+/**
+ * Valida el token de la sesión y comprueba que el correo pertenezca a un
+ * empleado. Si se indican roles, también exige que el empleado tenga uno de
+ * ellos. Devuelve null cuando el acceso está permitido.
+ */
+export async function authorizeEmployeeRequest(
+  request: NextRequest,
+  options: EmployeeRoleOptions = {},
+) {
   const accessToken = request.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
   if (!accessToken) {
-    return NextResponse.json({ error: "Debes iniciar sesión como administrador" }, { status: 401 });
+    return NextResponse.json({ error: "Debes iniciar sesión" }, { status: 401 });
   }
 
-  const payload = decodeJWT(accessToken);
-  const email = payload?.email as string | undefined;
-  if (!email) {
+  const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken);
+  if (userError || !user?.email) {
     return NextResponse.json({ error: "La sesión no es válida" }, { status: 401 });
   }
 
-  const { data: employee, error: empError } = await supabase.from("empleados")
+  const { data: employee, error: employeeError } = await supabase
+    .from("empleados")
     .select("id, email, rol, nombre, apellido")
-    .ilike("email", email)
+    .ilike("email", user.email)
     .maybeSingle();
-  console.log("Employee check:", { email, employee, empError });
-  if (empError) {
-    return NextResponse.json({ error: "No se pudo validar el permiso de administrador" }, { status: 500 });
+  if (employeeError) {
+    return NextResponse.json({ error: "No se pudo validar el permiso" }, { status: 500 });
   }
-  if (!employee || employee.rol !== "admin") {
-    return NextResponse.json({ error: "Solo un administrador puede gestionar empleados" }, { status: 403 });
+  if (!employee) {
+    return NextResponse.json({ error: "Solo el equipo puede acceder" }, { status: 403 });
+  }
+  if (options.roles && !options.roles.includes(employee.rol)) {
+    return NextResponse.json(
+      { error: options.message || "No tienes permiso para esta acción" },
+      { status: 403 },
+    );
   }
 
   return null;
+}
+
+export async function authorizeAdminEmployeeRequest(request: NextRequest) {
+  return authorizeEmployeeRequest(request, {
+    roles: ["admin"],
+    message: "Solo un administrador puede gestionar empleados",
+  });
 }

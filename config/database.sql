@@ -180,17 +180,14 @@ CREATE POLICY "Todos pueden insertar clientes" ON clientes FOR INSERT WITH CHECK
 CREATE POLICY "Todos pueden actualizar clientes" ON clientes FOR UPDATE USING (true);
 CREATE POLICY "Todos pueden eliminar clientes" ON clientes FOR DELETE USING (true);
 
+-- Caja, pagos y adicionales: solo el servidor (service_role) accede a estas
+-- tablas. Las rutas /api validan la sesión y el rol antes de consultar.
 ALTER TABLE pagos ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Todos pueden ver pagos" ON pagos FOR SELECT USING (true);
-CREATE POLICY "Todos pueden insertar pagos" ON pagos FOR INSERT WITH CHECK (true);
-
 ALTER TABLE pago_adicionales ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Todos pueden ver adicionales de pagos" ON pago_adicionales FOR SELECT USING (true);
-CREATE POLICY "Todos pueden insertar adicionales de pagos" ON pago_adicionales FOR INSERT WITH CHECK (true);
-
 ALTER TABLE movimientos_caja ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Todos pueden ver movimientos" ON movimientos_caja FOR SELECT USING (true);
-CREATE POLICY "Todos pueden insertar movimientos" ON movimientos_caja FOR INSERT WITH CHECK (true);
+REVOKE ALL ON pagos FROM anon, authenticated;
+REVOKE ALL ON pago_adicionales FROM anon, authenticated;
+REVOKE ALL ON movimientos_caja FROM anon, authenticated;
 
 -- ============================================
 -- POLICY: RLS para empleados
@@ -375,6 +372,10 @@ BEGIN
   RETURN jsonb_build_object('pago', row_to_json(v_pago), 'total', v_total, 'descuento', v_descuento);
 END;
 $$;
+
+-- La función solo se ejecuta desde el servidor, después de validar el rol.
+REVOKE ALL ON FUNCTION cobrar_cita(UUID, TEXT, DECIMAL, TEXT, UUID, TEXT, JSONB) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION cobrar_cita(UUID, TEXT, DECIMAL, TEXT, UUID, TEXT, JSONB) TO service_role;
 
 -- ============================================
 -- EMPLEADO ADMIN POR DEFECTO

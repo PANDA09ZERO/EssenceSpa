@@ -26,9 +26,11 @@ export default function Header() {
   const roleLabels: Record<string, string> = { admin: "Administrador", recepcionista: "Recepción", manicurista: "Especialista", empleado: "Equipo", cliente: "Cliente" };
   const isActive = (href: string) => pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`));
   const current = navItems.find(item => isActive(item.href))?.label || "Panel de control";
-  const links = navItems.map((item, index) => <div key={item.href}>
-    {index === 0 && <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[.18em] text-stone-500">Tu espacio de trabajo</p>}
-    {index === 7 && <p className="mb-3 mt-7 px-3 text-[10px] font-semibold uppercase tracking-[.18em] text-stone-500">Administración</p>}
+  const canManageCaja = user?.role === "admin" || user?.role === "recepcionista";
+  const visibleNavItems = navItems.filter(item => item.href !== "/dashboard/caja" || canManageCaja);
+  const links = visibleNavItems.map((item) => <div key={item.href}>
+    {item.href === "/dashboard" && <p className="mb-3 px-3 text-[10px] font-semibold uppercase tracking-[.18em] text-stone-500">Tu espacio de trabajo</p>}
+    {item.href === "/dashboard/caja" && <p className="mb-3 mt-7 px-3 text-[10px] font-semibold uppercase tracking-[.18em] text-stone-500">Administración</p>}
     <Link href={item.href} onClick={() => setMobileMenuOpen(false)} aria-current={isActive(item.href) ? "page" : undefined} className={`mb-1 flex min-h-11 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors ${isActive(item.href) ? "bg-brand-green text-white shadow-sm" : "text-stone-600 hover:bg-stone-100 hover:text-stone-950"}`}><item.icon size={18} strokeWidth={1.6} />{item.label}</Link>
   </div>);
 

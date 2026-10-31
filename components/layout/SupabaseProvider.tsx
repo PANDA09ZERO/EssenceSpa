@@ -15,6 +15,7 @@ type SupabaseContextType = {
   supabase: typeof supabase;
   user: User | null;
   loading: boolean;
+  roleLoading: boolean;
   signOut: () => Promise<void>;
 };
 
@@ -29,6 +30,7 @@ export function useSupabase() {
 export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [roleLoading, setRoleLoading] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   // Distingue un cierre de sesión explícito de una sesión expirada, para que
@@ -60,6 +62,27 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     return () => { active = false; clearTimeout(timeout); subscription.unsubscribe(); };
   }, []);
 
+  // El rol real vive en la tabla empleados; los metadatos pueden faltar en
+  // cuentas antiguas, así que se consulta y se usa como fuente de verdad.
+  useEffect(() => {
+    const email = user?.email;
+    if (!email) { setRoleLoading(false); return; }
+    let active = true;
+    setRoleLoading(true);
+    void (async () => {
+      try {
+        const { data } = await supabase.from("empleados").select("rol").ilike("email", email).maybeSingle();
+        if (!active || !data?.rol) return;
+        setUser(current => current && current.email === email ? { ...current, role: data.rol } : current);
+      } catch {
+        // Si falla la consulta se mantiene el rol de los metadatos.
+      } finally {
+        if (active) setRoleLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [user?.email]);
+
   useEffect(() => {
     if (!loading && !user && !signingOutRef.current && pathname.startsWith("/dashboard")) {
       router.replace("/login");
@@ -78,7 +101,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <SupabaseContext.Provider value={{ supabase, user, loading, signOut }}>
+    <SupabaseContext.Provider value={{ supabase, user, loading, roleLoading, signOut }}>
       {children}
     </SupabaseContext.Provider>
   );

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+let adminClient: ReturnType<typeof createSupabaseAdminClient> | null = null;
+const db = () => (adminClient ??= createSupabaseAdminClient());
 const pageSize = 1000;
 
 function getMonthStart(date: Date) {
@@ -15,7 +16,7 @@ function monthKey(date: Date) {
 async function getIncomeMovements(start: string, end: string) {
   const movements: { monto: number; created_at: string }[] = [];
   for (let offset = 0; ; offset += pageSize) {
-    const { data, error } = await supabase
+    const { data, error } = await db()
       .from("movimientos_caja")
       .select("monto, created_at")
       .eq("tipo", "ingreso")
@@ -33,7 +34,7 @@ async function getIncomeMovements(start: string, end: string) {
 async function getPaidAppointments(start: string, end: string) {
   const appointmentIds: string[] = [];
   for (let offset = 0; ; offset += pageSize) {
-    const { data, error } = await supabase
+    const { data, error } = await db()
       .from("pagos")
       .select("id_cita")
       .eq("estado", "pagado")
@@ -52,9 +53,9 @@ export async function GET(request: NextRequest) {
   try {
     const accessToken = request.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
     if (!accessToken) return NextResponse.json({ error: "Debes iniciar sesión para ver los reportes" }, { status: 401 });
-    const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken);
+    const { data: { user }, error: userError } = await db().auth.getUser(accessToken);
     if (userError || !user?.email) return NextResponse.json({ error: "La sesión no es válida" }, { status: 401 });
-    const { data: employee, error: employeeError } = await supabase
+    const { data: employee, error: employeeError } = await db()
       .from("empleados")
       .select("id")
       .ilike("email", user.email)
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
 
     const [movements, appointmentsResult, appointmentIds] = await Promise.all([
       getIncomeMovements(start, end),
-      supabase
+      db()
         .from("citas")
         .select("id", { count: "exact", head: true })
         .gte("fecha", currentMonthStart.toISOString().slice(0, 10))
@@ -93,7 +94,7 @@ export async function GET(request: NextRequest) {
 
     const serviceTotals = new Map<string, number>();
     for (let offset = 0; offset < appointmentIds.length; offset += 200) {
-      const { data, error } = await supabase
+      const { data, error } = await db()
         .from("cita_detalles")
         .select("cantidad, servicios(nombre)")
         .in("id_cita", appointmentIds.slice(offset, offset + 200));

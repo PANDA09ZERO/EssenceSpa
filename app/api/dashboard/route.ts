@@ -1,9 +1,11 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
+import { authorizeEmployeeRequest } from "@/lib/employee-api-auth";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
-
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await authorizeEmployeeRequest(request);
+  if (denied) return denied;
+  const supabase = createSupabaseAdminClient();
   const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
   const monthStart = `${today.slice(0, 7)}-01`;
   const results = await Promise.all([

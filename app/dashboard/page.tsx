@@ -1,6 +1,7 @@
 "use client";
 
 import { formatTime } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 import { useCallback, useEffect, useState } from "react";
 import { ArrowRight, ArrowUpRight, Calendar, CalendarDays, Calculator, Check, Clock3, RefreshCw, Sparkles, Users, Wallet } from "lucide-react";
 import Link from "next/link";
@@ -25,7 +26,9 @@ export default function DashboardPage() {
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true); setError("");
     try {
-      const response = await fetch("/api/dashboard", { signal, cache: "no-store" });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Tu sesión venció. Inicia sesión nuevamente.");
+      const response = await fetch("/api/dashboard", { signal, cache: "no-store", headers: { Authorization: `Bearer ${session.access_token}` } });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "No se pudo cargar el resumen");
       if (!signal?.aborted) { setData(result); setUpdatedAt(new Date()); }
