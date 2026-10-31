@@ -12,6 +12,42 @@ interface EmployeeRoleOptions {
   message?: string;
 }
 
+export interface EmployeeSession {
+  id: string;
+  email: string;
+  rol: string;
+  nombre: string | null;
+  apellido: string | null;
+}
+
+type EmployeeResult = { employee: EmployeeSession } | { error: NextResponse };
+
+async function resolveEmployee(request: NextRequest): Promise<EmployeeResult> {
+  const accessToken = request.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!accessToken) {
+    return { error: NextResponse.json({ error: "Debes iniciar sesión" }, { status: 401 }) };
+  }
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken);
+  if (userError || !user?.email) {
+    return { error: NextResponse.json({ error: "La sesión no es válida" }, { status: 401 }) };
+  }
+
+  const { data: employee, error: employeeError } = await supabase
+    .from("empleados")
+    .select("id, email, rol, nombre, apellido")
+    .ilike("email", user.email)
+    .maybeSingle();
+  if (employeeError) {
+    return { error: NextResponse.json({ error: "No se pudo validar el permiso" }, { status: 500 }) };
+  }
+  if (!employee) {
+    return { error: NextResponse.json({ error: "Solo el equipo puede acceder" }, { status: 403 }) };
+  }
+
+  return { employee: employee as EmployeeSession };
+}
+
 /**
  * Valida el token de la sesión y comprueba que el correo pertenezca a un
  * empleado. Si se indican roles, también exige que el empleado tenga uno de
@@ -21,28 +57,9 @@ export async function authorizeEmployeeRequest(
   request: NextRequest,
   options: EmployeeRoleOptions = {},
 ) {
-  const accessToken = request.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
-  if (!accessToken) {
-    return NextResponse.json({ error: "Debes iniciar sesión" }, { status: 401 });
-  }
-
-  const { data: { user }, error: userError } = await supabase.auth.getUser(accessToken);
-  if (userError || !user?.email) {
-    return NextResponse.json({ error: "La sesión no es válida" }, { status: 401 });
-  }
-
-  const { data: employee, error: employeeError } = await supabase
-    .from("empleados")
-    .select("id, email, rol, nombre, apellido")
-    .ilike("email", user.email)
-    .maybeSingle();
-  if (employeeError) {
-    return NextResponse.json({ error: "No se pudo validar el permiso" }, { status: 500 });
-  }
-  if (!employee) {
-    return NextResponse.json({ error: "Solo el equipo puede acceder" }, { status: 403 });
-  }
-  if (options.roles && !options.roles.includes(employee.rol)) {
+  const result = await resolveEmployee(request);
+  if ("error" in result) return result.error;
+  if (options.roles && !options.roles.includes(result.employee.rol)) {
     return NextResponse.json(
       { error: options.message || "No tienes permiso para esta acción" },
       { status: 403 },
@@ -50,6 +67,28 @@ export async function authorizeEmployeeRequest(
   }
 
   return null;
+}
+
+/**
+ * Igual que authorizeEmployeeRequest, pero además devuelve los datos del
+ * empleado autenticado (útil para registrar quién hizo la acción).
+ */
+export async function requireEmployeeRequest(
+  request: NextRequest,
+  options: EmployeeRoleOptions = {},
+): Promise<EmployeeResult> {
+  const result = await resolveEmployee(request);
+  if ("error" in result) return result;
+  if (options.roles && !options.roles.includes(result.employee.rol)) {
+    return {
+      error: NextResponse.json(
+        { error: options.message || "No tienes permiso para esta acción" },
+        { status: 403 },
+      ),
+    };
+  }
+
+  return result;
 }
 
 export async function authorizeAdminEmployeeRequest(request: NextRequest) {

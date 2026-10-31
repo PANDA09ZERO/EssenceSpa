@@ -1,22 +1,73 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authorizeEmployeeRequest } from "@/lib/employee-api-auth";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import {
+  addDaysKey,
+  daysBetweenKeys,
+  isValidDateKey,
+  limaDayRangeUtc,
+  limaTodayKey,
+} from "@/lib/lima-time";
 
 const CAJA_ROLES = ["admin", "recepcionista"];
 const CAJA_DENIED = "Solo administración y recepción pueden gestionar la caja";
+const MAX_RANGE_DAYS = 366;
+
+function isMissingTable(error: { code?: string; message?: string } | null) {
+  if (!error) return false;
+  return error.code === "42P01"
+    || error.code === "PGRST205"
+    || /relation .* does not exist|could not find the table/i.test(error.message || "");
+}
 
 export async function GET(request: NextRequest) {
   const denied = await authorizeEmployeeRequest(request, { roles: CAJA_ROLES, message: CAJA_DENIED });
   if (denied) return denied;
+
+  const hoy = limaTodayKey();
+  const search = request.nextUrl.searchParams;
+  const desdeParam = search.get("desde");
+  const hastaParam = search.get("hasta");
+  let desde = isValidDateKey(desdeParam) ? desdeParam : hoy;
+  let hasta = isValidDateKey(hastaParam) ? hastaParam : desde;
+  if (desde > hasta) [desde, hasta] = [hasta, desde];
+
+  const totalDias = daysBetweenKeys(desde, hasta) + 1;
+  if (totalDias > MAX_RANGE_DAYS) {
+    return NextResponse.json({ error: "El rango de fechas es demasiado largo" }, { status: 400 });
+  }
+
+  const { start, end } = limaDayRangeUtc(desde, hasta);
+  const anteriorHasta = addDaysKey(desde, -1);
+  const anteriorDesde = addDaysKey(anteriorHasta, -(totalDias - 1));
+  const anteriorRango = limaDayRangeUtc(anteriorDesde, anteriorHasta);
+
   const supabase = createSupabaseAdminClient();
-  const [{ data: movimientos, error: movimientosError }, { data: citas, error: citasError }, { data: promociones, error: promocionesError }, { data: pagos, error: pagosError }] = await Promise.all([
-    supabase.from("movimientos_caja").select("*").order("created_at", { ascending: false }),
+  const [
+    { data: movimientos, error: movimientosError },
+    { data: citas, error: citasError },
+    { data: promociones, error: promocionesError },
+    { data: pagos, error: pagosError },
+    { data: movimientosAnteriores, error: anterioresError },
+    { data: cierres, error: cierresError },
+  ] = await Promise.all([
+    supabase.from("movimientos_caja").select("*").gte("created_at", start).lt("created_at", end).order("created_at", { ascending: false }),
     supabase.from("citas").select("id, id_cliente, id_servicio, fecha, hora_inicio, total, estado, nombre_invitado, telefono_invitado, clientes(nombre, apellido), servicios(nombre, precio)").in("estado", ["pendiente", "confirmada", "completada"]).order("fecha", { ascending: true }),
     supabase.from("promociones").select("*").eq("activa", true),
     supabase.from("pagos").select("id_cita").eq("estado", "pagado"),
+    supabase.from("movimientos_caja").select("tipo, monto").gte("created_at", anteriorRango.start).lt("created_at", anteriorRango.end),
+    supabase.from("cierres_caja").select("*").gte("fecha", desde).lte("fecha", hasta).order("fecha", { ascending: false }),
   ]);
-  const error = movimientosError || citasError || promocionesError || pagosError;
+
+  const error = movimientosError || citasError || promocionesError || pagosError || anterioresError;
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+  // Si la migración de cierre todavía no se aplicó, la caja debe seguir funcionando.
+  const cierresDisponibles = !isMissingTable(cierresError);
+  if (cierresError && cierresDisponibles) {
+    return NextResponse.json({ error: cierresError.message }, { status: 400 });
+  }
+
   const pagoIds = [...new Set((movimientos || []).flatMap((movimiento) => movimiento.id_pago ? [movimiento.id_pago] : []))];
   const pagosDetalle = pagoIds.length
     ? await supabase.from("pagos").select("id, id_cita, subtotal, descuento, tipo_descuento, total, referencia, observaciones, estado, created_at, citas(fecha, hora_inicio, clientes(nombre, apellido), nombre_invitado, telefono_invitado, servicios(nombre))").in("id", pagoIds)
@@ -44,9 +95,32 @@ export async function GET(request: NextRequest) {
     ...movimiento,
     pago: movimiento.id_pago ? pagoPorId.get(movimiento.id_pago) || null : null,
   }));
+
+  let anterioresIngresos = 0;
+  let anterioresEgresos = 0;
+  for (const movimiento of movimientosAnteriores || []) {
+    const monto = Number(movimiento.monto) || 0;
+    if (movimiento.tipo === "ingreso") anterioresIngresos += monto;
+    else anterioresEgresos += monto;
+  }
+
   const citasPagadas = new Set((pagos || []).map((pago) => pago.id_cita));
   const citasPendientesDePago = (citas || []).filter((cita) => !citasPagadas.has(cita.id));
-  return NextResponse.json({ movimientos: movimientosConDetalle, citas: citasPendientesDePago, promociones: promociones || [] });
+  return NextResponse.json({
+    movimientos: movimientosConDetalle,
+    citas: citasPendientesDePago,
+    promociones: promociones || [],
+    cierres: cierresDisponibles ? cierres || [] : [],
+    cierresDisponibles,
+    hoy,
+    periodo: { desde, hasta, anteriorDesde, anteriorHasta },
+    resumenAnterior: {
+      ingresos: anterioresIngresos,
+      egresos: anterioresEgresos,
+      balance: anterioresIngresos - anterioresEgresos,
+      movimientos: (movimientosAnteriores || []).length,
+    },
+  });
 }
 
 export async function POST(request: NextRequest) {
