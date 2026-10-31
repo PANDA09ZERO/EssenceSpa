@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -119,7 +119,7 @@ function DetalleMovimientoModal({ movimiento, onClose }: { movimiento: Movimient
           <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Tipo</dt><dd className="text-right">{movimiento.tipo === "ingreso" ? "Ingreso" : "Egreso"}</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Monto</dt><dd className="text-right font-bold">{formatoMoneda(movimiento.monto)}</dd></div>
           <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Fecha</dt><dd className="text-right">{new Date(movimiento.created_at).toLocaleString("es-PE", { dateStyle: "long", timeStyle: "short" })}</dd></div>
-          <div className="flex justify-between gap-4"><dt className="text-brand-text-light">MÃ©todo de pago</dt><dd className="text-right capitalize">{movimiento.metodo_pago}</dd></div>
+          <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Método de pago</dt><dd className="text-right capitalize">{movimiento.metodo_pago}</dd></div>
           {movimiento.referencia && <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Referencia</dt><dd className="text-right">{movimiento.referencia}</dd></div>}
 
           {pago && (
@@ -128,12 +128,12 @@ function DetalleMovimientoModal({ movimiento, onClose }: { movimiento: Movimient
               {pago.cita ? (
                 <>
                   <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Cliente</dt><dd className="text-right">{pago.cita.clientes ? `${pago.cita.clientes.nombre} ${pago.cita.clientes.apellido}` : pago.cita.nombre_invitado?.trim() || "No disponible"}</dd></div>
-                  {!pago.cita.clientes && pago.cita.telefono_invitado && <div className="flex justify-between gap-4"><dt className="text-brand-text-light">TelÃ©fono</dt><dd className="text-right">{pago.cita.telefono_invitado}</dd></div>}
+                  {!pago.cita.clientes && pago.cita.telefono_invitado && <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Teléfono</dt><dd className="text-right">{pago.cita.telefono_invitado}</dd></div>}
                   <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Servicio</dt><dd className="text-right">{pago.cita.servicios?.nombre || "Servicio registrado"}</dd></div>
-                  <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Fecha de la cita</dt><dd className="text-right">{new Date(`${pago.cita.fecha}T00:00:00`).toLocaleDateString("es-PE", { dateStyle: "long" })} Â· {pago.cita.hora_inicio}</dd></div>
+                  <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Fecha de la cita</dt><dd className="text-right">{new Date(`${pago.cita.fecha}T00:00:00`).toLocaleDateString("es-PE", { dateStyle: "long" })} · {pago.cita.hora_inicio}</dd></div>
                 </>
               ) : (
-                <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Cita</dt><dd className="text-right">La cita ya no estÃ¡ disponible</dd></div>
+                <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Cita</dt><dd className="text-right">La cita ya no está disponible</dd></div>
               )}
               <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Subtotal de la cita</dt><dd className="text-right">{formatoMoneda(subtotalCita)}</dd></div>
               {adicionales.length > 0 && (
@@ -202,7 +202,7 @@ function CierreCajaModal({
   const cerrarCaja = async (event: FormEvent) => {
     event.preventDefault();
     if (contadoNum !== null && (!Number.isFinite(contadoNum) || contadoNum < 0)) {
-      setError("El efectivo contado debe ser un monto vÃ¡lido");
+      setError("El efectivo contado debe ser un monto válido");
       return;
     }
     setGuardando(true);
@@ -224,7 +224,7 @@ function CierreCajaModal({
   };
 
   const reabrirCaja = async () => {
-    if (!window.confirm(`Â¿Reabrir la caja del ${formatShortDay(dia.fecha)}? Se borrarÃ¡ el cierre guardado y podrÃ¡s volver a cerrarla.`)) return;
+    if (!window.confirm(`¿Reabrir la caja del ${formatShortDay(dia.fecha)}? Se borrará el cierre guardado y podrás volver a cerrarla.`)) return;
     setGuardando(true);
     setError("");
     try {
@@ -266,8 +266,8 @@ function CierreCajaModal({
                 <Lock size={15} /> Caja cerrada
               </div>
               <dl className="space-y-2">
-                <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Ingresos del dÃ­a</dt><dd className="font-medium text-green-600">{formatoMoneda(cierre.total_ingresos)}</dd></div>
-                <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Egresos del dÃ­a</dt><dd className="font-medium text-red-600">{formatoMoneda(cierre.total_egresos)}</dd></div>
+                <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Ingresos del día</dt><dd className="font-medium text-green-600">{formatoMoneda(cierre.total_ingresos)}</dd></div>
+                <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Egresos del día</dt><dd className="font-medium text-red-600">{formatoMoneda(cierre.total_egresos)}</dd></div>
                 <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Balance</dt><dd className="font-semibold">{formatoMoneda(cierre.balance)}</dd></div>
                 <div className="flex justify-between gap-4 border-t border-brand-cream-dark pt-2"><dt className="text-brand-text-light">Efectivo esperado</dt><dd className="font-medium">{formatoMoneda(cierre.efectivo_esperado)}</dd></div>
                 <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Efectivo contado</dt><dd className="font-medium">{cierre.efectivo_contado === null ? "No registrado" : formatoMoneda(cierre.efectivo_contado)}</dd></div>
@@ -277,31 +277,31 @@ function CierreCajaModal({
               </dl>
               {cierre.observaciones && <p className="rounded-xl bg-brand-cream p-3 text-xs leading-5 text-brand-text-light">{cierre.observaciones}</p>}
               <p className="text-xs text-brand-text-light">
-                Cerrada por {cierre.cerrado_por_nombre || cierre.cerrado_por_email || "el equipo"} Â· {new Date(cierre.created_at).toLocaleString("es-PE", { dateStyle: "medium", timeStyle: "short" })}
+                Cerrada por {cierre.cerrado_por_nombre || cierre.cerrado_por_email || "el equipo"} · {new Date(cierre.created_at).toLocaleString("es-PE", { dateStyle: "medium", timeStyle: "short" })}
               </p>
               {cambioPosterior && (
                 <p className="rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-800">
-                  Hay movimientos registrados despuÃ©s del cierre. Los totales del dÃ­a ya no coinciden con la foto guardada: reabre la caja y vuelve a cerrarla para actualizarla.
+                  Hay movimientos registrados después del cierre. Los totales del día ya no coinciden con la foto guardada: reabre la caja y vuelve a cerrarla para actualizarla.
                 </p>
               )}
               {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-              <button type="button" onClick={reabrirCaja} disabled={guardando} className="btn-secondary w-full"><LockOpen size={17} /> {guardando ? "Reabriendoâ€¦" : "Reabrir caja"}</button>
+              <button type="button" onClick={reabrirCaja} disabled={guardando} className="btn-secondary w-full"><LockOpen size={17} /> {guardando ? "Reabriendo…" : "Reabrir caja"}</button>
             </>
           ) : (
             <form onSubmit={cerrarCaja} className="space-y-4">
               <div>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-text-light">Totales por mÃ©todo</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-text-light">Totales por método</h3>
                 <ul className="mt-2 divide-y divide-brand-cream rounded-xl border border-brand-cream-dark">
                   {dia.metodos.map(([metodo, totales]) => (
                     <li key={metodo} className="flex items-center justify-between gap-3 px-3 py-2">
                       <span>{ETIQUETAS_METODO[metodo] || metodo}</span>
                       <span className="text-right text-xs">
                         <span className="block text-green-600">+{formatoMoneda(totales.ingresos)}</span>
-                        {totales.egresos > 0 && <span className="block text-red-600">âˆ’{formatoMoneda(totales.egresos)}</span>}
+                        {totales.egresos > 0 && <span className="block text-red-600">−{formatoMoneda(totales.egresos)}</span>}
                       </span>
                     </li>
                   ))}
-                  {dia.metodos.length === 0 && <li className="px-3 py-2 text-xs text-brand-text-light">Sin movimientos este dÃ­a.</li>}
+                  {dia.metodos.length === 0 && <li className="px-3 py-2 text-xs text-brand-text-light">Sin movimientos este día.</li>}
                 </ul>
               </div>
 
@@ -324,11 +324,11 @@ function CierreCajaModal({
               )}
               <label className="block">
                 <span className="label-field">Observaciones (opcional)</span>
-                <textarea className="input-field min-h-20" maxLength={500} placeholder="Notas del cierre, faltantes, incidenciasâ€¦" value={observaciones} onChange={(event) => setObservaciones(event.target.value)} />
+                <textarea className="input-field min-h-20" maxLength={500} placeholder="Notas del cierre, faltantes, incidencias…" value={observaciones} onChange={(event) => setObservaciones(event.target.value)} />
               </label>
-              <p className="text-xs leading-5 text-brand-text-light">El cierre guarda una foto de los totales de este dÃ­a. Si despuÃ©s registras otro movimiento, podrÃ¡s reabrir y volver a cerrar.</p>
+              <p className="text-xs leading-5 text-brand-text-light">El cierre guarda una foto de los totales de este día. Si después registras otro movimiento, podrás reabrir y volver a cerrar.</p>
               {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-              <button type="submit" disabled={guardando} className="btn-primary w-full">{guardando ? "Cerrandoâ€¦" : "Cerrar caja del dÃ­a"}</button>
+              <button type="submit" disabled={guardando} className="btn-primary w-full">{guardando ? "Cerrando…" : "Cerrar caja del día"}</button>
             </form>
           )}
         </div>
@@ -509,7 +509,7 @@ export default function CajaPage() {
   );
 
   if (sessionLoading || roleLoading) {
-    return <div className="bento-card text-sm text-brand-text-light">Cargando cajaâ€¦</div>;
+    return <div className="bento-card text-sm text-brand-text-light">Cargando caja…</div>;
   }
   if (!canManage) {
     return <div className="bento-card text-sm text-red-600">No tienes permisos para gestionar la caja.</div>;
@@ -523,7 +523,7 @@ export default function CajaPage() {
       <div className="bento-card space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <CalendarDays size={18} className="text-brand-green" aria-hidden="true" />
-          <span className="mr-1 text-sm font-semibold">DÃ­a</span>
+          <span className="mr-1 text-sm font-semibold">Día</span>
           <button
             type="button"
             onClick={irAHoy}
@@ -558,7 +558,7 @@ export default function CajaPage() {
       </div>
 
       <div>
-        <h2 className="font-display text-lg font-bold mb-2">Resumen Â· {formatDayLabel(fecha)}</h2>
+        <h2 className="font-display text-lg font-bold mb-2">Resumen · {formatDayLabel(fecha)}</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard icon={ArrowUpCircle} label="Ingresos" value={formatoMoneda(ingresos)} color="text-green-600" />
           <StatsCard icon={ArrowDownCircle} label="Egresos" value={formatoMoneda(egresos)} color="text-red-600" />
@@ -568,14 +568,14 @@ export default function CajaPage() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        <form onSubmit={cobrar} className="bento-card space-y-4"><div className="flex items-center justify-between"><h2 className="font-display text-lg font-bold">Cobrar cita</h2><span className="text-xs text-brand-text-light">Ingreso automÃ¡tico</span></div>
+        <form onSubmit={cobrar} className="bento-card space-y-4"><div className="flex items-center justify-between"><h2 className="font-display text-lg font-bold">Cobrar cita</h2><span className="text-xs text-brand-text-light">Ingreso automático</span></div>
           <select required className="input-field" value={selectedCita} onChange={(event) => setSelectedCita(event.target.value)}><option value="">Seleccionar cita</option>{citas.map((item) => <option key={item.id} value={item.id}>{item.fecha} {item.hora_inicio} - {item.clientes ? `${item.clientes.nombre} ${item.clientes.apellido}` : item.nombre_invitado || "Invitado"} - {formatoMoneda(item.total)}</option>)}</select>
           {cita && <div className="rounded-xl bg-brand-cream p-3 text-sm">Subtotal de la cita: <strong>{formatoMoneda(cita.total)}</strong><br />Servicio: {cita.servicios?.nombre || "Servicio registrado"}{adicionales.length > 0 && <div className="mt-2 space-y-1 border-t border-brand-cream-dark pt-2">{adicionales.map((item) => <p key={item.id} className="flex justify-between gap-2"><span>{item.concepto || "Adicional"}</span><span>{formatoMoneda(Number(item.monto) || 0)}</span></p>)}</div>}<div className="mt-2 border-t border-brand-cream-dark pt-2"><p className="flex justify-between"><span>Descuento</span><span>- {formatoMoneda(totalDescuentos)}</span></p><p className="mt-1 flex justify-between text-base"><strong>Total a cobrar</strong><strong>{formatoMoneda(totalCobro)}</strong></p><p className="mt-1 text-xs text-brand-text-light">Los descuentos se aplican solo al precio de la cita.</p></div></div>}
           <div className="space-y-2">
             <div className="flex items-center justify-between"><div><h3 className="text-sm font-semibold">Adicionales</h3><p className="text-xs text-brand-text-light">Agrega productos o servicios extra al cobro.</p></div><button type="button" onClick={() => setAdicionales((items) => [...items, { id: crypto.randomUUID(), concepto: "", monto: "" }])} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand-green"><Plus size={16} /> Agregar</button></div>
             {adicionales.map((item) => <div key={item.id} className="grid grid-cols-[1fr_7rem_auto] items-center gap-2"><input className="input-field" aria-label="Concepto adicional" placeholder="Concepto" value={item.concepto} onChange={(event) => setAdicionales((items) => items.map((current) => current.id === item.id ? { ...current, concepto: event.target.value } : current))} /><input className="input-field" aria-label="Monto adicional" type="number" inputMode="decimal" min="0.01" step="0.01" placeholder="S/ monto" value={item.monto} onChange={(event) => setAdicionales((items) => items.map((current) => current.id === item.id ? { ...current, monto: event.target.value } : current))} /><button type="button" onClick={() => setAdicionales((items) => items.filter((current) => current.id !== item.id))} className="min-h-11 min-w-11 rounded-xl text-brand-text-light hover:bg-brand-cream" aria-label={`Quitar ${item.concepto || "adicional"}`}><X size={18} /></button></div>)}
           </div>
-          <div className="grid grid-cols-2 gap-3"><select className="input-field" value={metodo} onChange={(event) => setMetodo(event.target.value)}><option value="efectivo">Efectivo</option><option value="yape">Yape</option><option value="plin">Plin</option><option value="tarjeta">Tarjeta</option><option value="transferencia">Transferencia</option></select><select className="input-field" value={promocion} onChange={(event) => setPromocion(event.target.value)}><option value="">Sin promociÃ³n</option>{promociones.map((item) => <option key={item.id} value={item.id}>{item.nombre} (-{item.descuento}%)</option>)}</select></div>
+          <div className="grid grid-cols-2 gap-3"><select className="input-field" value={metodo} onChange={(event) => setMetodo(event.target.value)}><option value="efectivo">Efectivo</option><option value="yape">Yape</option><option value="plin">Plin</option><option value="tarjeta">Tarjeta</option><option value="transferencia">Transferencia</option></select><select className="input-field" value={promocion} onChange={(event) => setPromocion(event.target.value)}><option value="">Sin promoción</option>{promociones.map((item) => <option key={item.id} value={item.id}>{item.nombre} (-{item.descuento}%)</option>)}</select></div>
           <div className="grid grid-cols-2 gap-3"><input type="number" min="0" step="0.01" className="input-field" placeholder="Descuento manual" value={descuento} onChange={(event) => setDescuento(event.target.value)} /><select className="input-field" value={tipoDescuento} onChange={(event) => setTipoDescuento(event.target.value)}><option value="monto_fijo">S/ fijo</option><option value="porcentaje">Porcentaje</option></select></div>
           <button className="btn-primary w-full" type="submit">Registrar pago y movimiento</button>
         </form>
@@ -586,7 +586,7 @@ export default function CajaPage() {
       <section className="space-y-3">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
-            <h2 className="font-display text-lg font-bold">Movimientos del dÃ­a</h2>
+            <h2 className="font-display text-lg font-bold">Movimientos del día</h2>
             <p className="text-xs text-brand-text-light">Toca un movimiento para ver su detalle.</p>
           </div>
           {!cierresDisponibles && (
@@ -604,9 +604,9 @@ export default function CajaPage() {
         </div>
 
         {cargando && movimientos.length === 0 ? (
-          <div className="bento-card text-sm text-brand-text-light">Cargando movimientosâ€¦</div>
+          <div className="bento-card text-sm text-brand-text-light">Cargando movimientos…</div>
         ) : movimientos.length === 0 ? (
-          <div className="bento-card text-sm text-brand-text-light">No hay movimientos este dÃ­a.</div>
+          <div className="bento-card text-sm text-brand-text-light">No hay movimientos este día.</div>
         ) : (
           <section className="rounded-2xl border border-brand-cream-dark bg-white shadow-sm">
             {diaActual.metodos.length > 0 && (
@@ -614,7 +614,7 @@ export default function CajaPage() {
                 {diaActual.metodos.map(([metodo, totales]) => (
                   <span key={metodo} className="rounded-full bg-white px-2.5 py-1 text-xs">
                     {ETIQUETAS_METODO[metodo] || metodo}: <strong className="text-green-600">+{formatoMoneda(totales.ingresos)}</strong>
-                    {totales.egresos > 0 && <span className="text-red-600"> Â· âˆ’{formatoMoneda(totales.egresos)}</span>}
+                    {totales.egresos > 0 && <span className="text-red-600"> · −{formatoMoneda(totales.egresos)}</span>}
                   </span>
                 ))}
               </div>
@@ -625,7 +625,7 @@ export default function CajaPage() {
                   <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${mov.tipo === "ingreso" ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>{mov.tipo === "ingreso" ? <ArrowUpCircle size={18} /> : <ArrowDownCircle size={18} />}</span>
                   <span className="flex-1">
                     <span className="block font-medium">{mov.concepto}</span>
-                    <span className="block text-xs text-brand-text-light">{new Date(mov.created_at).toLocaleString("es-PE", { timeStyle: "short", dateStyle: "short" })} Â· {ETIQUETAS_METODO[mov.metodo_pago] || mov.metodo_pago}</span>
+                    <span className="block text-xs text-brand-text-light">{new Date(mov.created_at).toLocaleString("es-PE", { timeStyle: "short", dateStyle: "short" })} · {ETIQUETAS_METODO[mov.metodo_pago] || mov.metodo_pago}</span>
                   </span>
                   <span className={`shrink-0 font-bold ${mov.tipo === "ingreso" ? "text-green-600" : "text-red-600"}`}>{mov.tipo === "ingreso" ? "+" : "-"}{formatoMoneda(mov.monto)}</span>
                   <ChevronRight size={18} className="shrink-0 text-brand-text-light" />
@@ -639,10 +639,10 @@ export default function CajaPage() {
       <section className="space-y-3">
         <div>
           <h2 className="font-display text-lg font-bold">Cierres de caja</h2>
-          <p className="text-xs text-brand-text-light">Historial de los Ãºltimos 30 dÃ­as. Toca uno para ver sus movimientos.</p>
+          <p className="text-xs text-brand-text-light">Historial de los últimos 30 días. Toca uno para ver sus movimientos.</p>
         </div>
         {historialOrdenado.length === 0 ? (
-          <div className="bento-card text-sm text-brand-text-light">AÃºn no hay cierres de caja registrados.</div>
+          <div className="bento-card text-sm text-brand-text-light">Aún no hay cierres de caja registrados.</div>
         ) : (
           <div className="space-y-2">
             {historialOrdenado.map((cierre) => (
@@ -655,12 +655,12 @@ export default function CajaPage() {
                 <span className="flex flex-col">
                   <span className="text-sm font-semibold">{formatDayLabel(cierre.fecha)}</span>
                   <span className="text-xs text-brand-text-light">
-                    Cerrada por {cierre.cerrado_por_nombre || cierre.cerrado_por_email || "el equipo"} Â· {new Date(cierre.created_at).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}
+                    Cerrada por {cierre.cerrado_por_nombre || cierre.cerrado_por_email || "el equipo"} · {new Date(cierre.created_at).toLocaleString("es-PE", { dateStyle: "short", timeStyle: "short" })}
                   </span>
                 </span>
                 <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm">
                   <span className="text-green-600">+{formatoMoneda(cierre.total_ingresos)}</span>
-                  <span className="text-red-600">âˆ’{formatoMoneda(cierre.total_egresos)}</span>
+                  <span className="text-red-600">−{formatoMoneda(cierre.total_egresos)}</span>
                   <span className="rounded-lg bg-brand-cream px-2 py-1 font-semibold">Balance {formatoMoneda(cierre.balance)}</span>
                   {cierre.diferencia !== null && (
                     <span className={`font-semibold ${Number(cierre.diferencia) === 0 ? "text-brand-green" : Number(cierre.diferencia) > 0 ? "text-green-600" : "text-red-600"}`}>
