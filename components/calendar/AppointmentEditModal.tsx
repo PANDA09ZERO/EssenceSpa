@@ -89,7 +89,7 @@ export default function AppointmentEditModal({ cita, onClose, onSaved }: Props) 
     }
   };
   return (
-    <div className="fixed inset-0 bg-brand-green/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Editar cita" onClick={onClose}>
+    <div className="fixed inset-0 bg-brand-green/40 backdrop-blur-sm z-[80] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Editar cita" onClick={onClose}>
       <div className="bg-white rounded-3xl shadow-bento w-full max-w-lg max-h-[92vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
         <div className="p-6 bg-gradient-to-r from-brand-green to-brand-green-dark text-white">
           <div className="flex items-start justify-between">
