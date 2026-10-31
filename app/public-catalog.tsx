@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDown, ArrowUpRight, Check, Clock3, Facebook, Instagram, MapPin, Menu, MessageCircle, Plus, Search, ShoppingBag, Sparkles, Tag, X } from "lucide-react";
 import type { PublicPromotion, PublicService } from "./page";
 import coverImage from "../imagenes/WhatsApp Image 2026-09-26 at 10.11.45 PM.jpeg";
@@ -42,6 +42,120 @@ function formatDate(date: string | null) {
   return `${day}/${month}/${year}`;
 }
 
+function ServiceDetailModal({ service, isSelected, onToggle, onClose }: {
+  service: PublicService;
+  isSelected: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+}) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    closeRef.current?.focus();
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onCloseRef.current();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = overflow;
+      previouslyFocused?.focus();
+    };
+  }, []);
+
+  const consultUrl = `https://wa.me/51917650720?text=${encodeURIComponent(`Hola, Essence Spa. Quisiera consultar por el servicio ${service.nombre}.`)}`;
+
+  return (
+    <div
+      className="fixed inset-0 z-[1100] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-6"
+      role="presentation"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="service-detail-title"
+        className="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl bg-white text-brand-text shadow-2xl sm:max-h-[88vh] sm:rounded-3xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          ref={closeRef}
+          type="button"
+          onClick={onClose}
+          aria-label="Cerrar detalle del servicio"
+          className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-brand-text shadow-md transition-colors hover:bg-white"
+        >
+          <X size={20} />
+        </button>
+
+        <div className="overflow-y-auto overscroll-contain">
+          <div className="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden bg-brand-green/10 sm:aspect-[2/1]">
+            {service.imagen ? (
+              <Image
+                src={service.imagen}
+                alt={`Imagen de ${service.nombre}`}
+                fill
+                sizes="(max-width: 768px) 100vw, 768px"
+                unoptimized
+                className="object-cover"
+              />
+            ) : (
+              <Sparkles aria-hidden="true" size={44} strokeWidth={1.2} className="text-brand-green-light/60" />
+            )}
+            {service.categoria && (
+              <span className="absolute left-4 top-4 bg-white/95 px-3 py-1 text-xs font-medium text-brand-green">{service.categoria}</span>
+            )}
+          </div>
+
+          <div className="p-5 sm:p-8">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <h2 id="service-detail-title" className="font-display text-3xl font-semibold leading-tight sm:text-4xl">{service.nombre}</h2>
+              <p className="shrink-0 font-display text-2xl font-semibold text-brand-terracotta">{formatPrice(service.precio)}</p>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-brand-text-light">
+              {service.duracion ? <span className="flex items-center gap-2"><Clock3 size={16} />{service.duracion} min</span> : null}
+              <span className="flex items-center gap-2"><Tag size={16} />{service.categoria || "Servicio"}</span>
+            </div>
+
+            <div className="mt-6 border-t border-brand-cream-dark pt-5">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-green-light">Descripción</h3>
+              <p className="mt-3 whitespace-pre-line text-sm leading-7 text-brand-text">
+                {service.descripcion?.trim() || "Escríbenos por WhatsApp y te contamos todos los detalles de este servicio."}
+              </p>
+            </div>
+
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={onToggle}
+                aria-pressed={isSelected}
+                className={`inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold transition-colors ${isSelected ? "border-brand-green bg-brand-green text-white" : "border-brand-green text-brand-green hover:bg-brand-green hover:text-white"}`}
+              >
+                {isSelected ? <Check size={17} /> : <Plus size={17} />}
+                {isSelected ? "En tu selección" : "Elegir servicio"}
+              </button>
+              <a
+                href={consultUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full bg-brand-green px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-green-dark"
+              >
+                <MessageCircle size={18} /> Consultar por WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PublicCatalog({ services, promotions, dataUnavailable }: Props) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showFullGallery, setShowFullGallery] = useState(false);
@@ -49,6 +163,7 @@ export default function PublicCatalog({ services, promotions, dataUnavailable }:
   const [category, setCategory] = useState("Todos");
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [selectedPromotionId, setSelectedPromotionId] = useState<string | null>(null);
+  const [detailService, setDetailService] = useState<PublicService | null>(null);
   const [isOrderPanelOpen, setIsOrderPanelOpen] = useState(false);
   const categories = useMemo(() => ["Todos", ...Array.from(new Set(services.map((service) => service.categoria).filter((item): item is string => Boolean(item))))], [services]);
   const filteredServices = useMemo(() => services.filter((service) => {
@@ -152,17 +267,23 @@ export default function PublicCatalog({ services, promotions, dataUnavailable }:
             {filteredServices.map((service, index) => {
               return (
                 <article key={service.id} className="catalog-reveal group flex flex-col overflow-hidden rounded-2xl border border-brand-cream-dark bg-white transition-shadow hover:shadow-bento" style={{ animationDelay: `${Math.min(index, 6) * 55}ms` }}>
-                  <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-brand-green/10">
+                  <button type="button" onClick={() => setDetailService(service)} aria-label={`Ver detalle de ${service.nombre}`} className="group/image relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-brand-green/10">
                     {service.imagen ? <Image src={service.imagen} alt={`Imagen de ${service.nombre}`} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw" unoptimized className="object-cover transition-transform duration-500 group-hover:scale-[1.03]" /> : <Sparkles aria-hidden="true" size={34} strokeWidth={1.2} className="text-brand-green-light/60" />}
                     {service.categoria && <span className="absolute left-3 top-3 bg-white/95 px-3 py-1 text-xs font-medium text-brand-green">{service.categoria}</span>}
-                  </div>
+                    <span aria-hidden="true" className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-black/45 py-2 text-xs font-medium text-white opacity-0 transition-opacity duration-300 group-hover/image:opacity-100">Ver detalle <ArrowUpRight size={14} /></span>
+                  </button>
                   <div className="flex flex-1 flex-col p-5">
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="font-display text-xl font-semibold leading-6">{service.nombre}</h3>
                       <span className="shrink-0 text-sm font-semibold text-brand-terracotta">{formatPrice(service.precio)}</span>
                     </div>
                     {service.descripcion && <p className="mt-2 line-clamp-2 text-sm leading-5 text-brand-text-light">{service.descripcion}</p>}
-                    {service.duracion && <p className="mt-4 flex items-center gap-2 text-xs text-brand-text-light"><Clock3 size={14} />{service.duracion} min</p>}
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      {service.duracion ? <p className="flex items-center gap-2 text-xs text-brand-text-light"><Clock3 size={14} />{service.duracion} min</p> : <span />}
+                      <button type="button" onClick={() => setDetailService(service)} className="inline-flex min-h-9 shrink-0 items-center gap-1 text-xs font-semibold text-brand-green underline decoration-brand-green/30 underline-offset-4 transition-colors hover:decoration-brand-green">
+                        Ver detalle <ArrowUpRight size={14} />
+                      </button>
+                    </div>
                     <button type="button" aria-pressed={selectedServiceIds.includes(service.id)} onClick={() => toggleService(service.id)} className={`mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-colors ${selectedServiceIds.includes(service.id) ? "border-brand-green bg-brand-green text-white" : "border-brand-cream-dark text-brand-green hover:border-brand-green"}`}>
                       {selectedServiceIds.includes(service.id) ? <Check size={16} /> : <Plus size={16} />}
                       {selectedServiceIds.includes(service.id) ? "En tu selección" : "Elegir servicio"}
@@ -286,6 +407,15 @@ export default function PublicCatalog({ services, promotions, dataUnavailable }:
             <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 flex h-6 min-w-6 items-center justify-center rounded-full border-2 border-white bg-[#EAE4D9] px-1 text-[11px] font-bold text-brand-text">{selectedServices.length}</span>
           </button>
         </div>
+      )}
+
+      {detailService && (
+        <ServiceDetailModal
+          service={detailService}
+          isSelected={selectedServiceIds.includes(detailService.id)}
+          onToggle={() => toggleService(detailService.id)}
+          onClose={() => setDetailService(null)}
+        />
       )}
 
       <footer className="border-t border-brand-cream-dark bg-brand-green-dark text-white">
