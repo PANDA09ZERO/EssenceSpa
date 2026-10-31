@@ -9,6 +9,8 @@ export interface Appointment {
   id_cliente?: string | null;
   id_empleado?: string | null;
   id_servicio?: string | null;
+  nombre_invitado?: string | null;
+  telefono_invitado?: string | null;
   clientes: { nombre: string; apellido: string } | null;
   servicios: { nombre: string; precio?: number; duracion?: number } | null;
   empleados: { nombre: string; apellido: string } | null;

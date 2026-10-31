@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const supabase = createSupabaseAdminClient();
   const [{ data: movimientos, error: movimientosError }, { data: citas, error: citasError }, { data: promociones, error: promocionesError }, { data: pagos, error: pagosError }] = await Promise.all([
     supabase.from("movimientos_caja").select("*").order("created_at", { ascending: false }),
-    supabase.from("citas").select("id, id_cliente, id_servicio, fecha, hora_inicio, total, estado, clientes(nombre, apellido), servicios(nombre, precio)").in("estado", ["pendiente", "confirmada", "completada"]).order("fecha", { ascending: true }),
+    supabase.from("citas").select("id, id_cliente, id_servicio, fecha, hora_inicio, total, estado, nombre_invitado, telefono_invitado, clientes(nombre, apellido), servicios(nombre, precio)").in("estado", ["pendiente", "confirmada", "completada"]).order("fecha", { ascending: true }),
     supabase.from("promociones").select("*").eq("activa", true),
     supabase.from("pagos").select("id_cita").eq("estado", "pagado"),
   ]);
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   const pagoIds = [...new Set((movimientos || []).flatMap((movimiento) => movimiento.id_pago ? [movimiento.id_pago] : []))];
   const pagosDetalle = pagoIds.length
-    ? await supabase.from("pagos").select("id, id_cita, subtotal, descuento, tipo_descuento, total, referencia, observaciones, estado, created_at, citas(fecha, hora_inicio, clientes(nombre, apellido), servicios(nombre))").in("id", pagoIds)
+    ? await supabase.from("pagos").select("id, id_cita, subtotal, descuento, tipo_descuento, total, referencia, observaciones, estado, created_at, citas(fecha, hora_inicio, clientes(nombre, apellido), nombre_invitado, telefono_invitado, servicios(nombre))").in("id", pagoIds)
     : { data: [], error: null };
   if (pagosDetalle.error) return NextResponse.json({ error: pagosDetalle.error.message }, { status: 400 });
   const { data: adicionales, error: adicionalesError } = pagoIds.length

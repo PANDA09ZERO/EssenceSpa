@@ -79,8 +79,14 @@ CREATE TABLE citas (
   estado TEXT DEFAULT 'pendiente',
   notas TEXT,
   total DECIMAL(10,2) DEFAULT 0,
+  -- Cita de un invitado sin cliente registrado.
+  nombre_invitado TEXT,
+  telefono_invitado TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT citas_cliente_o_invitado CHECK (
+    id_cliente IS NOT NULL OR (nombre_invitado IS NOT NULL AND btrim(nombre_invitado) <> '')
+  )
 );
 
 -- ============================================

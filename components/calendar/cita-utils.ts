@@ -25,10 +25,24 @@ export const estadoLabels: Record<string, string> = {
   cancelada: "Cancelada",
 };
 
-export function fullName(person: { nombre: string; apellido: string } | null | undefined): string | null {
+export function fullName(person: { nombre?: string | null; apellido?: string | null } | null | undefined): string | null {
   if (!person) return null;
   const full = `${person.nombre || ""} ${person.apellido || ""}`.trim();
   return full || null;
+}
+
+// Nombre visible de una cita: cliente registrado, invitado o un texto neutro.
+export function citaClientName(
+  cita: { clientes?: { nombre?: string | null; apellido?: string | null } | null; nombre_invitado?: string | null } | null | undefined,
+): string {
+  return fullName(cita?.clientes) || cita?.nombre_invitado?.trim() || "Cliente sin nombre";
+}
+
+// Una cita es de invitado cuando no tiene cliente registrado pero sí nombre.
+export function isGuestCita(
+  cita: { clientes?: { nombre?: string | null; apellido?: string | null } | null; nombre_invitado?: string | null } | null | undefined,
+): boolean {
+  return !fullName(cita?.clientes) && Boolean(cita?.nombre_invitado?.trim());
 }
 
 function toMinutes(hhmm: string | null | undefined): number | null {

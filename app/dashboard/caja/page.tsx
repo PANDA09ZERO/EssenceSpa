@@ -17,6 +17,8 @@ interface PagoDetalle {
   cita: {
     fecha: string;
     hora_inicio: string;
+    nombre_invitado?: string | null;
+    telefono_invitado?: string | null;
     clientes: { nombre: string; apellido: string } | null;
     servicios: { nombre: string } | null;
   } | null;
@@ -32,7 +34,7 @@ interface Movimiento {
   observaciones: string | null;
   pago: PagoDetalle | null;
 }
-interface Cita { id: string; fecha: string; hora_inicio: string; total: number; estado: string; clientes: { nombre: string; apellido: string } | null; servicios: { nombre: string; precio: number } | null; }
+interface Cita { id: string; fecha: string; hora_inicio: string; total: number; estado: string; nombre_invitado?: string | null; telefono_invitado?: string | null; clientes: { nombre: string; apellido: string } | null; servicios: { nombre: string; precio: number } | null; }
 interface Promocion { id: string; nombre: string; descuento: number; fecha_inicio: string | null; fecha_fin: string | null; }
 
 const formatoMoneda = (valor: number) => `S/ ${Number(valor).toFixed(2)}`;
@@ -82,7 +84,8 @@ function DetalleMovimientoModal({ movimiento, onClose }: { movimiento: Movimient
               <div className="border-t border-brand-cream-dark pt-3 font-semibold">Detalle del cobro</div>
               {pago.cita ? (
                 <>
-                  <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Cliente</dt><dd className="text-right">{pago.cita.clientes ? `${pago.cita.clientes.nombre} ${pago.cita.clientes.apellido}` : "No disponible"}</dd></div>
+                  <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Cliente</dt><dd className="text-right">{pago.cita.clientes ? `${pago.cita.clientes.nombre} ${pago.cita.clientes.apellido}` : pago.cita.nombre_invitado?.trim() || "No disponible"}</dd></div>
+                  {!pago.cita.clientes && pago.cita.telefono_invitado && <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Teléfono</dt><dd className="text-right">{pago.cita.telefono_invitado}</dd></div>}
                   <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Servicio</dt><dd className="text-right">{pago.cita.servicios?.nombre || "Servicio registrado"}</dd></div>
                   <div className="flex justify-between gap-4"><dt className="text-brand-text-light">Fecha de la cita</dt><dd className="text-right">{new Date(`${pago.cita.fecha}T00:00:00`).toLocaleDateString("es-PE", { dateStyle: "long" })} · {pago.cita.hora_inicio}</dd></div>
                 </>
@@ -195,7 +198,7 @@ export default function CajaPage() {
 
     <div className="grid lg:grid-cols-2 gap-6">
       <form onSubmit={cobrar} className="bento-card space-y-4"><div className="flex items-center justify-between"><h2 className="font-display text-lg font-bold">Cobrar cita</h2><span className="text-xs text-brand-text-light">Ingreso automático</span></div>
-        <select required className="input-field" value={selectedCita} onChange={(event) => setSelectedCita(event.target.value)}><option value="">Seleccionar cita</option>{citas.map((item) => <option key={item.id} value={item.id}>{item.fecha} {item.hora_inicio} - {item.clientes?.nombre} {item.clientes?.apellido} - {formatoMoneda(item.total)}</option>)}</select>
+        <select required className="input-field" value={selectedCita} onChange={(event) => setSelectedCita(event.target.value)}><option value="">Seleccionar cita</option>{citas.map((item) => <option key={item.id} value={item.id}>{item.fecha} {item.hora_inicio} - {item.clientes ? `${item.clientes.nombre} ${item.clientes.apellido}` : item.nombre_invitado || "Invitado"} - {formatoMoneda(item.total)}</option>)}</select>
         {cita && <div className="rounded-xl bg-brand-cream p-3 text-sm">Subtotal de la cita: <strong>{formatoMoneda(cita.total)}</strong><br />Servicio: {cita.servicios?.nombre || "Servicio registrado"}{adicionales.length > 0 && <div className="mt-2 space-y-1 border-t border-brand-cream-dark pt-2">{adicionales.map((item) => <p key={item.id} className="flex justify-between gap-2"><span>{item.concepto || "Adicional"}</span><span>{formatoMoneda(Number(item.monto) || 0)}</span></p>)}</div>}<div className="mt-2 border-t border-brand-cream-dark pt-2"><p className="flex justify-between"><span>Descuento</span><span>- {formatoMoneda(totalDescuentos)}</span></p><p className="mt-1 flex justify-between text-base"><strong>Total a cobrar</strong><strong>{formatoMoneda(totalCobro)}</strong></p><p className="mt-1 text-xs text-brand-text-light">Los descuentos se aplican solo al precio de la cita.</p></div></div>}
         <div className="space-y-2">
           <div className="flex items-center justify-between"><div><h3 className="text-sm font-semibold">Adicionales</h3><p className="text-xs text-brand-text-light">Agrega productos o servicios extra al cobro.</p></div><button type="button" onClick={() => setAdicionales((items) => [...items, { id: crypto.randomUUID(), concepto: "", monto: "" }])} className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-brand-green"><Plus size={16} /> Agregar</button></div>

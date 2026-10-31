@@ -4,7 +4,7 @@ import { conflictMessage, findEmpleadoConflict, toHHMM, toMinutes } from "@/lib/
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-const CITAS_SELECT = "id, id_cliente, id_empleado, id_servicio, fecha, hora_inicio, hora_fin, estado, notas, total, clientes(nombre, apellido), servicios(nombre, precio, duracion), empleados(nombre, apellido), cita_detalles(id_servicio, servicios(nombre, duracion))";
+const CITAS_SELECT = "id, id_cliente, id_empleado, id_servicio, fecha, hora_inicio, hora_fin, estado, notas, total, nombre_invitado, telefono_invitado, clientes(nombre, apellido), servicios(nombre, precio, duracion), empleados(nombre, apellido), cita_detalles(id_servicio, servicios(nombre, duracion))";
 
 export async function GET() {
   const { data, error } = await supabase.from("citas").select(CITAS_SELECT).order("fecha", { ascending: true }).order("hora_inicio", { ascending: true });
@@ -17,8 +17,11 @@ export async function POST(request: NextRequest) {
   const serviceIds = Array.isArray(body.servicios)
     ? [...new Set(body.servicios.filter((id: unknown): id is string => typeof id === "string"))]
     : typeof body.id_servicio === "string" ? [body.id_servicio] : [];
-  if (!body.id_cliente || !body.fecha || !body.hora_inicio || serviceIds.length === 0) {
-    return NextResponse.json({ error: "Cliente, fecha, hora y al menos un servicio son obligatorios" }, { status: 400 });
+  const idCliente = typeof body.id_cliente === "string" && body.id_cliente ? body.id_cliente : null;
+  const nombreInvitado = typeof body.nombre_invitado === "string" ? body.nombre_invitado.trim().slice(0, 120) : "";
+  const telefonoInvitado = typeof body.telefono_invitado === "string" ? body.telefono_invitado.trim().slice(0, 40) : "";
+  if ((!idCliente && !nombreInvitado) || !body.fecha || !body.hora_inicio || serviceIds.length === 0) {
+    return NextResponse.json({ error: "Cliente o invitado, fecha, hora y al menos un servicio son obligatorios" }, { status: 400 });
   }
 
   const startMinutes = toMinutes(body.hora_inicio);
@@ -44,7 +47,7 @@ export async function POST(request: NextRequest) {
   if (conflict) return NextResponse.json({ error: conflictMessage(conflict) }, { status: 409 });
 
   const { data, error } = await supabase.from("citas").insert([{
-    id_cliente: body.id_cliente,
+    id_cliente: idCliente,
     id_empleado: body.id_empleado || null,
     id_servicio: serviceIds[0],
     fecha: body.fecha,
@@ -53,6 +56,8 @@ export async function POST(request: NextRequest) {
     estado: "pendiente",
     notas: body.notas || null,
     total,
+    nombre_invitado: idCliente ? null : nombreInvitado || null,
+    telefono_invitado: idCliente ? null : telefonoInvitado || null,
   }]).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 

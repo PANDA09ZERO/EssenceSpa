@@ -8,7 +8,7 @@ import Card from "@/components/bento/Card";
 import { Calendar, Clock, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { formatTime } from "@/lib/utils";
-import { compareCitaSchedule, citaServiceNames, estadoLabels } from "@/components/calendar/cita-utils";
+import { citaClientName, compareCitaSchedule, citaServiceNames, estadoLabels } from "@/components/calendar/cita-utils";
 import { peruDateKey, shiftDateKey, agendaDateLabel } from "@/lib/appointment-dates";
 
 type DateFilter = "ayer" | "hoy" | "manana" | "todas" | "fecha";
@@ -45,7 +45,7 @@ export default function CitasPage() {
   const dayAppointments = citas.filter(cita => selectedDate === null || cita.fecha === selectedDate);
   const filtered = dayAppointments.filter(cita => estado === "Todos" || cita.estado === estado).sort(compareCitaSchedule);
   const periodLabel = selectedDate === null ? "Todas las fechas" : selectedDate ? agendaDateLabel(selectedDate, today) : "Elige una fecha para consultar";
-  const getName = (cita: Appointment) => cita.clientes ? `${cita.clientes.nombre} ${cita.clientes.apellido}` : "Cliente sin nombre";
+  const getName = (cita: Appointment) => citaClientName(cita);
 
   return <div className="space-y-6">
     <div className="flex flex-wrap items-center justify-between gap-4"><div><h1 className="font-display text-3xl font-bold text-brand-green">Citas</h1><p className="mt-1 text-brand-text-light">Gestiona tus citas y agenda</p></div><AppointmentModal onCreated={loadCitas} /></div>

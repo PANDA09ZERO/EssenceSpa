@@ -4,7 +4,7 @@ import { conflictMessage, findEmpleadoConflict, toHHMM, toMinutes } from "@/lib/
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-const CITAS_SELECT = "id, id_cliente, id_empleado, id_servicio, fecha, hora_inicio, hora_fin, estado, notas, total, clientes(nombre, apellido), servicios(nombre, precio, duracion), empleados(nombre, apellido), cita_detalles(id_servicio, servicios(nombre, duracion))";
+const CITAS_SELECT = "id, id_cliente, id_empleado, id_servicio, fecha, hora_inicio, hora_fin, estado, notas, total, nombre_invitado, telefono_invitado, clientes(nombre, apellido), servicios(nombre, precio, duracion), empleados(nombre, apellido), cita_detalles(id_servicio, servicios(nombre, duracion))";
 const ESTADOS_PERMITIDOS = new Set(["pendiente", "confirmada", "en_progreso", "completada", "cancelada"]);
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -26,7 +26,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const { data: existing, error: findError } = await supabase
     .from("citas")
-    .select("id, id_cliente, id_empleado, id_servicio, fecha, hora_inicio, hora_fin, estado, notas")
+    .select("id, id_cliente, id_empleado, id_servicio, fecha, hora_inicio, hora_fin, estado, notas, nombre_invitado, telefono_invitado")
     .eq("id", id)
     .maybeSingle();
   if (findError) return NextResponse.json({ error: findError.message }, { status: 400 });
@@ -55,7 +55,17 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const fecha = typeof body.fecha === "string" && body.fecha ? body.fecha : existing.fecha;
   const horaInicio = typeof body.hora_inicio === "string" && body.hora_inicio ? body.hora_inicio : existing.hora_inicio;
-  const idCliente = typeof body.id_cliente === "string" && body.id_cliente ? body.id_cliente : existing.id_cliente;
+  const idCliente = Object.prototype.hasOwnProperty.call(body, "id_cliente")
+    ? (typeof body.id_cliente === "string" && body.id_cliente ? body.id_cliente : null)
+    : existing.id_cliente;
+  const nombreInvitado = body.nombre_invitado === undefined
+    ? existing.nombre_invitado
+    : (typeof body.nombre_invitado === "string" && body.nombre_invitado.trim() ? body.nombre_invitado.trim().slice(0, 120) : null);
+  const telefonoInvitado = body.telefono_invitado === undefined
+    ? existing.telefono_invitado
+    : (typeof body.telefono_invitado === "string" && body.telefono_invitado.trim() ? body.telefono_invitado.trim().slice(0, 40) : null);
+  const finalNombreInvitado = idCliente ? null : nombreInvitado;
+  const finalTelefonoInvitado = idCliente ? null : telefonoInvitado;
   const idEmpleado = body.id_empleado === undefined
     ? existing.id_empleado
     : (typeof body.id_empleado === "string" && body.id_empleado ? body.id_empleado : null);
@@ -67,7 +77,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!fecha) return NextResponse.json({ error: "La fecha es obligatoria" }, { status: 400 });
   const startMinutes = toMinutes(horaInicio);
   if (startMinutes === null) return NextResponse.json({ error: "La hora de inicio no es válida" }, { status: 400 });
-  if (!idCliente) return NextResponse.json({ error: "El cliente es obligatorio" }, { status: 400 });
+  if (!idCliente && !finalNombreInvitado) return NextResponse.json({ error: "El cliente o el nombre del invitado es obligatorio" }, { status: 400 });
 
   const { data: services, error: servicesError } = await supabase
     .from("servicios")
@@ -128,6 +138,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       estado,
       notas,
       total,
+      nombre_invitado: finalNombreInvitado,
+      telefono_invitado: finalTelefonoInvitado,
     })
     .eq("id", id)
     .select(CITAS_SELECT)

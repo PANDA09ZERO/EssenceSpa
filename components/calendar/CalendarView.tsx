@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import { eachDayOfInterval, endOfMonth, format, isToday, startOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Clock, Eye, Pencil, Scissors, User, UserRound, X } from "lucide-react";
+import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Clock, Eye, Pencil, Phone, Scissors, User, UserPlus, UserRound, X } from "lucide-react";
 import { formatTime } from "@/lib/utils";
 import AppointmentEditModal from "./AppointmentEditModal";
+import ConvertGuestModal from "./ConvertGuestModal";
 import type { Appointment } from "./types";
-import { citaDurationMinutes, citaServiceNames, estadoLabels, fullName, statusBadges, statusColors, compareCitaSchedule } from "./cita-utils";
+import { citaClientName, citaDurationMinutes, citaServiceNames, estadoLabels, fullName, isGuestCita, statusBadges, statusColors, compareCitaSchedule } from "./cita-utils";
 
 export type { Appointment };
 
@@ -18,6 +19,7 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [selectedCitaId, setSelectedCitaId] = useState<string | null>(null);
   const [editingCita, setEditingCita] = useState<Appointment | null>(null);
+  const [convertingCita, setConvertingCita] = useState<Appointment | null>(null);
 
   useEffect(() => {
     if (focusDate) setCurrentDate(new Date(`${focusDate}T12:00:00`));
@@ -87,8 +89,8 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
                       type="button"
                       onClick={() => openCita(key, app.id)}
                       className={`w-2.5 h-2.5 rounded-full transition-transform hover:scale-150 ${statusColors[app.estado] || "bg-gray-400"}`}
-                      title={`${formatTime(app.hora_inicio)} · ${fullName(app.clientes) || "Cliente"} · ${citaServiceNames(app).join(", ")}`}
-                      aria-label={`Ver cita de ${fullName(app.clientes) || "cliente"} a las ${formatTime(app.hora_inicio)}`}
+                      title={`${formatTime(app.hora_inicio)} · ${citaClientName(app)} · ${citaServiceNames(app).join(", ")}`}
+                      aria-label={`Ver cita de ${citaClientName(app)} a las ${formatTime(app.hora_inicio)}`}
                     />
                   ))}
                   {apps.length > 3 && (
@@ -127,7 +129,7 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-sm truncate">{fullName(cita.clientes) || "Cliente sin nombre"}</p>
+                        <p className="font-medium text-sm truncate">{citaClientName(cita)}</p>
                         <span className={`text-[10px] px-2 py-0.5 rounded-full ${statusBadges[cita.estado] || "bg-gray-100 text-gray-600"}`}>{estadoLabels[cita.estado] || cita.estado}</span>
                       </div>
                       <p className="text-xs text-brand-text-light truncate">{citaServiceNames(cita).join(", ")} · {fullName(cita.empleados) || "Sin trabajador asignado"}</p>
@@ -145,15 +147,21 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
 
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
-                    <h3 className="font-display text-lg font-bold truncate">{fullName(detailCita.clientes) || "Cliente sin nombre"}</h3>
+                    <h3 className="font-display text-lg font-bold truncate">{citaClientName(detailCita)}</h3>
                     <p className="text-xs text-brand-text-light capitalize">{format(new Date(`${detailCita.fecha}T12:00:00`), "EEEE d 'de' MMMM yyyy", { locale: es })}</p>
+                    {isGuestCita(detailCita) && (
+                      <span className="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">Invitado</span>
+                    )}
                   </div>
                   <span className={`text-xs px-3 py-1 rounded-full ${statusBadges[detailCita.estado] || "bg-gray-100 text-gray-600"}`}>{estadoLabels[detailCita.estado] || detailCita.estado}</span>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-3">
                   {[
-                    { icon: User, label: "Cliente", value: fullName(detailCita.clientes) || "Cliente sin nombre" },
+                    { icon: User, label: "Cliente", value: citaClientName(detailCita) },
+                    ...(isGuestCita(detailCita) && detailCita.telefono_invitado
+                      ? [{ icon: Phone, label: "Teléfono", value: detailCita.telefono_invitado }]
+                      : []),
                     { icon: Scissors, label: "Servicio", value: citaServiceNames(detailCita).join(", ") || "Sin servicio registrado" },
                     { icon: UserRound, label: "Trabajador", value: fullName(detailCita.empleados) || "Sin trabajador asignado" },
                     { icon: CalendarDays, label: "Fecha", value: format(new Date(`${detailCita.fecha}T12:00:00`), "d 'de' MMMM yyyy", { locale: es }) },
@@ -176,6 +184,11 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3">
+                  {isGuestCita(detailCita) && (
+                    <button type="button" onClick={() => setConvertingCita(detailCita)} className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-brand-green/30 bg-brand-green/5 py-3 font-semibold text-brand-green transition-colors hover:bg-brand-green/10">
+                      <UserPlus size={16} /> Registrar como cliente
+                    </button>
+                  )}
                   <button type="button" onClick={() => setEditingCita(detailCita)} className="btn-primary flex-1 flex items-center justify-center gap-2"><Pencil size={16} /> Editar cita</button>
                   <button type="button" onClick={closeDayModal} className="flex-1 py-3 rounded-xl bg-brand-cream text-brand-text font-semibold hover:bg-brand-cream/80 transition-colors">Cerrar</button>
                 </div>
@@ -190,6 +203,13 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
           cita={editingCita}
           onClose={() => setEditingCita(null)}
           onSaved={() => { setEditingCita(null); onUpdated?.(); }}
+        />
+      )}
+      {convertingCita && (
+        <ConvertGuestModal
+          cita={convertingCita}
+          onClose={() => setConvertingCita(null)}
+          onConverted={() => { setConvertingCita(null); onUpdated?.(); }}
         />
       )}
     </>

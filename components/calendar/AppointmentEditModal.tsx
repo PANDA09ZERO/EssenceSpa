@@ -4,16 +4,21 @@ import { formatTime } from "@/lib/utils";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Save, Trash2, X } from "lucide-react";
 import type { Appointment } from "./types";
-import { estadoLabels, fullName } from "./cita-utils";
+import { citaClientName, estadoLabels } from "./cita-utils";
+import ClientPicker, { type ClientSelection } from "./ClientPicker";
 
-interface Option { id: string; nombre: string; apellido?: string; precio?: number; duracion?: number; }
+interface Option { id: string; nombre: string; apellido?: string | null; precio?: number; duracion?: number; telefono?: string | null; }
 interface OptionsState { clientes: Option[]; servicios: Option[]; empleados: Option[]; }
 interface Props { cita: Appointment; onClose: () => void; onSaved?: () => void; }
 
 const ESTADOS = ["pendiente", "confirmada", "en_progreso", "completada", "cancelada"];
 
 export default function AppointmentEditModal({ cita, onClose, onSaved }: Props) {
-  const [cliente, setCliente] = useState(cita.id_cliente || "");
+  const [clientSelection, setClientSelection] = useState<ClientSelection>({
+    idCliente: cita.id_cliente || null,
+    nombreInvitado: cita.id_cliente ? "" : cita.nombre_invitado || "",
+    telefonoInvitado: cita.id_cliente ? "" : cita.telefono_invitado || "",
+  });
   const [servicios, setServicios] = useState<string[]>(() => {
     const fromDetails = (cita.cita_detalles || []).map((detail) => detail.id_servicio).filter((serviceId): serviceId is string => Boolean(serviceId));
     if (fromDetails.length > 0) return fromDetails;
@@ -52,13 +57,27 @@ export default function AppointmentEditModal({ cita, onClose, onSaved }: Props) 
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (!clientSelection.idCliente && !clientSelection.nombreInvitado.trim()) {
+      setError("Selecciona un cliente o escribe el nombre del invitado.");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
       const response = await fetch(`/api/citas/${cita.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id_cliente: cliente, servicios, id_empleado: empleado || null, fecha, hora_inicio: hora, estado, notas }),
+        body: JSON.stringify({
+          id_cliente: clientSelection.idCliente,
+          nombre_invitado: clientSelection.idCliente ? null : clientSelection.nombreInvitado.trim() || null,
+          telefono_invitado: clientSelection.idCliente ? null : clientSelection.telefonoInvitado.trim() || null,
+          servicios,
+          id_empleado: empleado || null,
+          fecha,
+          hora_inicio: hora,
+          estado,
+          notas,
+        }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "No se pudo actualizar la cita");
@@ -80,7 +99,7 @@ export default function AppointmentEditModal({ cita, onClose, onSaved }: Props) 
             </div>
             <button type="button" onClick={onClose} className="p-2 rounded-xl hover:bg-white/20 shrink-0" aria-label="Cerrar"><X size={20} /></button>
           </div>
-          <p className="text-white/80 text-sm mt-3 truncate">Cliente: <strong>{fullName(cita.clientes) || "Cliente sin nombre"}</strong></p>
+          <p className="text-white/80 text-sm mt-3 truncate">Cliente: <strong>{citaClientName(cita)}</strong></p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
@@ -88,10 +107,13 @@ export default function AppointmentEditModal({ cita, onClose, onSaved }: Props) 
 
           <div>
             <label className="label-field">Cliente *</label>
-            <select required className="input-field" value={cliente} onChange={(event) => setCliente(event.target.value)} disabled={!options}>
-              <option value="">Seleccionar cliente</option>
-              {(options?.clientes || []).map((item) => <option key={item.id} value={item.id}>{item.nombre} {item.apellido}</option>)}
-            </select>
+            <ClientPicker
+              clients={options?.clientes || []}
+              value={clientSelection}
+              onChange={setClientSelection}
+              onClientCreated={(client) => setOptions((current) => current ? { ...current, clientes: [...current.clientes, client] } : current)}
+              disabled={!options}
+            />
           </div>
 
           <div>
@@ -145,7 +167,7 @@ export default function AppointmentEditModal({ cita, onClose, onSaved }: Props) 
 
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl bg-brand-cream text-brand-text font-semibold hover:bg-brand-cream/80 transition-colors">Cancelar</button>
-            <button type="submit" className="btn-primary flex-1 flex items-center justify-center gap-2" disabled={loading || servicios.length === 0 || !cliente || !fecha || !hora}>
+            <button type="submit" className="btn-primary flex-1 flex items-center justify-center gap-2" disabled={loading || servicios.length === 0 || (!clientSelection.idCliente && !clientSelection.nombreInvitado.trim()) || !fecha || !hora}>
               <Save size={16} /> {loading ? "Guardando..." : "Guardar cambios"}
             </button>
           </div>
