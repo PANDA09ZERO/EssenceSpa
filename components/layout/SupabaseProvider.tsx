@@ -31,6 +31,8 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [roleLoading, setRoleLoading] = useState(false);
+  // Fuerza releer el rol desde la base al volver a la app.
+  const [roleVersion, setRoleVersion] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
   // Distingue un cierre de sesión explícito de una sesión expirada, para que
@@ -62,6 +64,21 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     return () => { active = false; clearTimeout(timeout); subscription.unsubscribe(); };
   }, []);
 
+  // Si un administrador cambia el rol mientras la sesión sigue abierta, al
+  // volver a la pestaña o a la app se vuelve a consultar el rol real.
+  useEffect(() => {
+    const refreshRole = () => setRoleVersion((version) => version + 1);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") refreshRole();
+    };
+    window.addEventListener("focus", refreshRole);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.removeEventListener("focus", refreshRole);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, []);
+
   // El rol real vive en la tabla empleados; los metadatos pueden faltar en
   // cuentas antiguas, así que se consulta y se usa como fuente de verdad.
   useEffect(() => {
@@ -81,7 +98,7 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
       }
     })();
     return () => { active = false; };
-  }, [user?.email]);
+  }, [user?.email, roleVersion]);
 
   useEffect(() => {
     if (!loading && !user && !signingOutRef.current && pathname.startsWith("/dashboard")) {
