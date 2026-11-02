@@ -6,7 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 // gestionarlas desde el dashboard.
 export async function GET() {
   const supabase = createSupabaseAdminClient();
-  const { data, error } = await supabase.from("categorias").select("*").order("nombre");
+  const { data, error } = await supabase.from("categorias").select("id, nombre, descripcion, icono").order("nombre");
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ data });
 }

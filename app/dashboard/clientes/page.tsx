@@ -12,9 +12,11 @@ export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [error, setError] = useState("");
 
-  useEffect(() => {
+  const loadClientes = () => {
     fetch("/api/clientes").then(async (response) => { const result = await response.json(); if (!response.ok) throw new Error(result.error); setClientes(result.data || []); }).catch((loadError) => setError(loadError instanceof Error ? loadError.message : "No se pudieron cargar los clientes"));
-  }, []);
+  };
+
+  useEffect(() => { loadClientes(); }, []);
 
   const filtered = clientes.filter(c =>
     `${c.nombre} ${c.apellido}`.toLowerCase().includes(search.toLowerCase())
@@ -27,7 +29,7 @@ export default function ClientesPage() {
           <h1 className="font-display text-3xl font-bold text-brand-green">Clientes</h1>
           <p className="text-brand-text-light mt-1">Gestiona tu base de datos de clientes</p>
         </div>
-        <CreateResourceModal title="Cliente" endpoint="/api/clientes" fields={[{ name: "nombre", label: "Nombre", required: true }, { name: "apellido", label: "Apellido", required: true }, { name: "telefono", label: "Teléfono", required: true }, { name: "email", label: "Email", type: "email" }]} onCreated={() => window.location.reload()} />
+        <CreateResourceModal title="Cliente" endpoint="/api/clientes" fields={[{ name: "nombre", label: "Nombre", required: true }, { name: "apellido", label: "Apellido", required: true }, { name: "telefono", label: "Teléfono", required: true }, { name: "email", label: "Email", type: "email" }]} onCreated={() => loadClientes()} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">

@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
+  compress: true,
+  poweredByHeader: false,
+  reactStrictMode: true,
   env: {
     // Versión del despliegue actual. Permite avisar al móvil cuando hay una
     // actualización pendiente sin necesidad de un service worker.

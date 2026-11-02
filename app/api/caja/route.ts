@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     { data: movimientosAnteriores, error: anterioresError },
     { data: cierres, error: cierresError },
   ] = await Promise.all([
-    supabase.from("movimientos_caja").select("*").gte("created_at", start).lt("created_at", end).order("created_at", { ascending: false }),
+    supabase.from("movimientos_caja").select("id, tipo, concepto, monto, metodo_pago, referencia, id_pago, observaciones, created_at").gte("created_at", start).lt("created_at", end).order("created_at", { ascending: false }),
     supabase.from("citas").select("id, id_cliente, id_servicio, fecha, hora_inicio, total, estado, nombre_invitado, telefono_invitado, clientes(nombre, apellido), servicios(nombre, precio)").in("estado", ["pendiente", "confirmada", "completada"]).order("fecha", { ascending: true }),
     supabase.from("promociones").select("*").eq("activa", true),
     supabase.from("pagos").select("id_cita").eq("estado", "pagado"),
