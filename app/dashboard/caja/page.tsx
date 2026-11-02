@@ -102,7 +102,7 @@ function DetalleMovimientoModal({ movimiento, onClose }: { movimiento: Movimient
   const subtotalCita = pago ? Math.max(Number(pago.subtotal) - totalAdicionales, 0) : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="presentation" onClick={onClose}>
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4" role="presentation" onClick={onClose}>
       <section
         role="dialog"
         aria-modal="true"
