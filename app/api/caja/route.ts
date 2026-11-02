@@ -26,6 +26,8 @@ export async function GET(request: NextRequest) {
 
   const hoy = limaTodayKey();
   const search = request.nextUrl.searchParams;
+  const soloCierres = search.get("soloCierres") === "1";
+  const sinAnterior = search.get("sinAnterior") === "1";
   const desdeParam = search.get("desde");
   const hastaParam = search.get("hasta");
   let desde = isValidDateKey(desdeParam) ? desdeParam : hoy;
@@ -43,6 +45,26 @@ export async function GET(request: NextRequest) {
   const anteriorRango = limaDayRangeUtc(anteriorDesde, anteriorHasta);
 
   const supabase = createSupabaseAdminClient();
+
+  // Para la lista de cierres (historial) solo necesitamos la tabla cierres_caja.
+  if (soloCierres) {
+    const { data: cierres, error: cierresError } = await supabase
+      .from("cierres_caja")
+      .select("*")
+      .gte("fecha", desde)
+      .lte("fecha", hasta)
+      .order("fecha", { ascending: false });
+    const cierresDisponibles = !isMissingTable(cierresError);
+    if (cierresError && cierresDisponibles) {
+      return NextResponse.json({ error: cierresError.message }, { status: 400 });
+    }
+    return NextResponse.json({
+      cierres: cierresDisponibles ? cierres || [] : [],
+      cierresDisponibles,
+      hoy,
+    });
+  }
+
   const [
     { data: movimientos, error: movimientosError },
     { data: citas, error: citasError },
@@ -55,7 +77,9 @@ export async function GET(request: NextRequest) {
     supabase.from("citas").select("id, id_cliente, id_servicio, fecha, hora_inicio, total, estado, nombre_invitado, telefono_invitado, clientes(nombre, apellido), servicios(nombre, precio)").in("estado", ["pendiente", "confirmada", "completada"]).order("fecha", { ascending: true }),
     supabase.from("promociones").select("*").eq("activa", true),
     supabase.from("pagos").select("id_cita").eq("estado", "pagado"),
-    supabase.from("movimientos_caja").select("tipo, monto").gte("created_at", anteriorRango.start).lt("created_at", anteriorRango.end),
+    sinAnterior
+      ? Promise.resolve({ data: [], error: null })
+      : supabase.from("movimientos_caja").select("tipo, monto").gte("created_at", anteriorRango.start).lt("created_at", anteriorRango.end),
     supabase.from("cierres_caja").select("*").gte("fecha", desde).lte("fecha", hasta).order("fecha", { ascending: false }),
   ]);
 

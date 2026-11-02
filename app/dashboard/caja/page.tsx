@@ -370,35 +370,44 @@ export default function CajaPage() {
 
   const loadSeq = useRef(0);
 
-  const loadCaja = useCallback(async () => {
+  const loadDia = useCallback(async () => {
     const seq = ++loadSeq.current;
+    const headers = await getAuthHeaders();
+    const response = await fetch(`/api/caja?desde=${fecha}&hasta=${fecha}&sinAnterior=1`, { headers, cache: "no-store" });
+    const result = await response.json();
+    if (seq !== loadSeq.current) return;
+    if (!response.ok) throw new Error(result.error || "No se pudo cargar caja");
+    setMovimientos(result.movimientos || []);
+    setCitas((result.citas || []).filter((cita: Cita) => cita.total > 0));
+    setPromociones(result.promociones || []);
+    setCierreDelDia((result.cierres || [])[0] || null);
+    setCierresDisponibles(result.cierresDisponibles !== false);
+    if (result.hoy) setHoy(result.hoy);
+  }, [fecha, getAuthHeaders]);
+
+  const loadHistorial = useCallback(async () => {
     const headers = await getAuthHeaders();
     const todayKey = limaTodayKey();
     const histStart = addDaysKey(todayKey, -29);
-    const [dayResponse, histResponse] = await Promise.all([
-      fetch(`/api/caja?desde=${fecha}&hasta=${fecha}`, { headers, cache: "no-store" }),
-      fetch(`/api/caja?desde=${histStart}&hasta=${todayKey}`, { headers, cache: "no-store" }),
-    ]);
-    const dayResult = await dayResponse.json();
-    const histResult = histResponse.ok ? await histResponse.json() : { cierres: [] };
-    if (seq !== loadSeq.current) return;
-    if (!dayResponse.ok) throw new Error(dayResult.error || "No se pudo cargar caja");
-    setMovimientos(dayResult.movimientos || []);
-    setCitas((dayResult.citas || []).filter((cita: Cita) => cita.total > 0));
-    setPromociones(dayResult.promociones || []);
-    setCierreDelDia((dayResult.cierres || [])[0] || null);
-    setCierresDisponibles(dayResult.cierresDisponibles !== false);
-    if (dayResult.hoy) setHoy(dayResult.hoy);
-    setHistorialCierres(histResult.cierres || []);
-  }, [fecha, getAuthHeaders]);
+    const response = await fetch(`/api/caja?desde=${histStart}&hasta=${todayKey}&soloCierres=1`, { headers, cache: "no-store" });
+    if (!response.ok) return;
+    const result = await response.json();
+    setHistorialCierres(result.cierres || []);
+    if (result.cierresDisponibles !== undefined) setCierresDisponibles(result.cierresDisponibles !== false);
+  }, [getAuthHeaders]);
 
   useEffect(() => {
     if (!canManage) return;
     setCargando(true);
-    loadCaja()
+    loadDia()
       .catch((error) => setMessage(error.message))
       .finally(() => setCargando(false));
-  }, [canManage, loadCaja]);
+  }, [canManage, loadDia]);
+
+  useEffect(() => {
+    if (!canManage) return;
+    void loadHistorial();
+  }, [canManage, loadHistorial]);
 
   useEffect(() => {
     const citaId = new URLSearchParams(window.location.search).get("cita");
@@ -471,7 +480,7 @@ export default function CajaPage() {
       setSelectedCita("");
       setAdicionales([]);
       setDescuento("0");
-      await loadCaja();
+      await loadDia();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "No se pudo registrar el pago");
     }
@@ -494,7 +503,7 @@ export default function CajaPage() {
       if (!response.ok) throw new Error(result.error || "No se pudo registrar el egreso");
       setMessage("Egreso registrado correctamente");
       setEgreso({ concepto: "", monto: "", metodo_pago: "efectivo" });
-      await loadCaja();
+      await loadDia();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "No se pudo registrar el egreso");
     }
@@ -680,7 +689,7 @@ export default function CajaPage() {
           dia={cierreDia}
           cierre={cierrePorFechaHelper(cierreDia.fecha, cierreDelDia, historialCierres)}
           onClose={() => setCierreDia(null)}
-          onSaved={() => { setCierreDia(null); void loadCaja(); }}
+          onSaved={() => { setCierreDia(null); void loadDia(); void loadHistorial(); }}
           getAuthHeaders={getAuthHeaders}
         />
       )}
