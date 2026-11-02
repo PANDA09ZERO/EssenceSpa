@@ -150,6 +150,7 @@ function ServiceDetailModal({ service, isSelected, onToggle, onClose }: {
               </a>
             </div>
           </div>
+          <div className="h-6 shrink-0" aria-hidden="true" />
         </div>
       </div>
     </div>
