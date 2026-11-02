@@ -457,12 +457,12 @@ export default function CajaPage() {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) },
         body: JSON.stringify({
-          cita_id: cita.id,
+          id_cita: cita.id,
           metodo_pago: metodo,
-          descuento: descuentoManual,
+          descuento_manual: Number(descuento),
           tipo_descuento: tipoDescuento,
-          promocion_id: promocion || null,
-          adicionales: adicionales.map((item) => ({ concepto: item.concepto, monto: Number(item.monto) })),
+          id_promocion: promocion || null,
+          adicionales: adicionales.map((item) => ({ concepto: item.concepto.trim(), monto: Number(item.monto) })),
         }),
       });
       const result = await response.json();
