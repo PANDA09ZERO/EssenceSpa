@@ -72,7 +72,7 @@ function ServiceDetailModal({ service, isSelected, onToggle, onClose }: {
 
   return (
     <div
-      className="fixed inset-0 z-[1100] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-6"
+      className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm sm:p-6"
       role="presentation"
       onClick={onClose}
     >
@@ -80,7 +80,7 @@ function ServiceDetailModal({ service, isSelected, onToggle, onClose }: {
         role="dialog"
         aria-modal="true"
         aria-labelledby="service-detail-title"
-        className="relative flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl bg-white text-brand-text shadow-2xl sm:max-h-[88vh] sm:rounded-3xl"
+        className="relative flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl bg-white text-brand-text shadow-2xl sm:max-h-[88vh]"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -93,7 +93,7 @@ function ServiceDetailModal({ service, isSelected, onToggle, onClose }: {
           <X size={20} />
         </button>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(3rem+env(safe-area-inset-bottom))]">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-6">
           <div className="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden bg-brand-green/10 sm:aspect-[2/1]">
             {service.imagen ? (
               <Image
