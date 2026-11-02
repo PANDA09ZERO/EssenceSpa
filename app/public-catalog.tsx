@@ -93,7 +93,7 @@ function ServiceDetailModal({ service, isSelected, onToggle, onClose }: {
           <X size={20} />
         </button>
 
-        <div className="overflow-y-auto overscroll-contain pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
           <div className="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden bg-brand-green/10 sm:aspect-[2/1]">
             {service.imagen ? (
               <Image
