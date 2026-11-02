@@ -9,7 +9,7 @@
   outline: 3px solid #a77d48;
   outline-offset: 4px;
 }
-.public-catalog footer { padding-bottom: 100px; }
+.public-catalog footer { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
 
 .dashboard-shell .text-brand-text-light { color: #68635c; }
 .dashboard-shell .bento-card,

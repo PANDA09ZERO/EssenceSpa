@@ -80,7 +80,7 @@ function ServiceDetailModal({ service, isSelected, onToggle, onClose }: {
         role="dialog"
         aria-modal="true"
         aria-labelledby="service-detail-title"
-        className="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl bg-white text-brand-text shadow-2xl sm:max-h-[88vh] sm:rounded-3xl"
+        className="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl bg-white text-brand-text shadow-2xl pb-[env(safe-area-inset-bottom)] sm:max-h-[88vh] sm:rounded-3xl sm:pb-0"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -219,7 +219,7 @@ export default function PublicCatalog({ services, promotions, dataUnavailable }:
           </nav>}
         </header>
 
-        <div id="inicio" className="mx-auto w-full max-w-7xl px-5 pb-20 pt-36 sm:px-8 sm:pb-24">
+        <div id="inicio" className="mx-auto w-full max-w-7xl px-5 pb-28 pt-36 sm:px-8 sm:pb-32">
           <p className="mb-5 text-xs font-semibold uppercase tracking-[0.18em] text-white/80">Belleza, cuidado y pausa</p>
           <h1 className="max-w-3xl font-display text-5xl font-medium leading-[1.04] sm:text-7xl">Un momento<br />para ti.</h1>
           <p className="mt-6 max-w-xl text-base leading-7 text-white/90 sm:text-lg">
@@ -358,7 +358,7 @@ export default function PublicCatalog({ services, promotions, dataUnavailable }:
       </section>
 
       {selectedServices.length > 0 && (
-        <div className="fixed bottom-5 right-5 z-[1000]">
+        <div className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom))] right-5 z-[1000]">
           {isOrderPanelOpen && (
             <section
               id="order-panel"
