@@ -80,7 +80,7 @@ function ServiceDetailModal({ service, isSelected, onToggle, onClose }: {
         role="dialog"
         aria-modal="true"
         aria-labelledby="service-detail-title"
-        className="relative flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl bg-white text-brand-text shadow-2xl pb-[env(safe-area-inset-bottom)] sm:max-h-[88vh] sm:rounded-3xl sm:pb-0"
+        className="relative flex max-h-[85vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl bg-white text-brand-text shadow-2xl mb-2 sm:mb-0 sm:max-h-[88vh] sm:rounded-3xl"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -93,7 +93,7 @@ function ServiceDetailModal({ service, isSelected, onToggle, onClose }: {
           <X size={20} />
         </button>
 
-        <div className="overflow-y-auto overscroll-contain">
+        <div className="overflow-y-auto overscroll-contain pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
           <div className="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden bg-brand-green/10 sm:aspect-[2/1]">
             {service.imagen ? (
               <Image
