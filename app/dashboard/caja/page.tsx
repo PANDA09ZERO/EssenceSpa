@@ -16,6 +16,7 @@ import {
 import StatsCard from "@/components/bento/StatCard";
 import { useSupabase } from "@/components/layout/SupabaseProvider";
 import { addDaysKey, formatDayLabel, formatShortDay, limaTodayKey } from "@/lib/lima-time";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface Adicional { id: string; concepto: string; monto: string; }
 interface PagoDetalle {
@@ -208,7 +209,7 @@ function CierreCajaModal({
     setGuardando(true);
     setError("");
     try {
-      const response = await fetch("/api/caja/cierre", {
+      const response = await apiFetch("/api/caja/cierre", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) },
         body: JSON.stringify({ fecha: dia.fecha, efectivo_contado: contadoNum, observaciones: observaciones.trim() || null }),
@@ -228,7 +229,7 @@ function CierreCajaModal({
     setGuardando(true);
     setError("");
     try {
-      const response = await fetch(`/api/caja/cierre?fecha=${dia.fecha}`, {
+      const response = await apiFetch(`/api/caja/cierre?fecha=${dia.fecha}`, {
         method: "DELETE",
         headers: await getAuthHeaders(),
       });
@@ -373,7 +374,7 @@ export default function CajaPage() {
   const loadDia = useCallback(async () => {
     const seq = ++loadSeq.current;
     const headers = await getAuthHeaders();
-    const response = await fetch(`/api/caja?desde=${fecha}&hasta=${fecha}&sinAnterior=1`, { headers, cache: "no-store" });
+    const response = await apiFetch(`/api/caja?desde=${fecha}&hasta=${fecha}&sinAnterior=1`, { headers, cache: "no-store" });
     const result = await response.json();
     if (seq !== loadSeq.current) return;
     if (!response.ok) throw new Error(result.error || "No se pudo cargar caja");
@@ -389,7 +390,7 @@ export default function CajaPage() {
     const headers = await getAuthHeaders();
     const todayKey = limaTodayKey();
     const histStart = addDaysKey(todayKey, -29);
-    const response = await fetch(`/api/caja?desde=${histStart}&hasta=${todayKey}&soloCierres=1`, { headers, cache: "no-store" });
+    const response = await apiFetch(`/api/caja?desde=${histStart}&hasta=${todayKey}&soloCierres=1`, { headers, cache: "no-store" });
     if (!response.ok) return;
     const result = await response.json();
     setHistorialCierres(result.cierres || []);
@@ -462,7 +463,7 @@ export default function CajaPage() {
     event.preventDefault();
     if (!cita) return;
     try {
-      const response = await fetch("/api/caja", {
+      const response = await apiFetch("/api/caja", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) },
         body: JSON.stringify({
@@ -489,7 +490,7 @@ export default function CajaPage() {
   const registrarEgreso = async (event: FormEvent) => {
     event.preventDefault();
     try {
-      const response = await fetch("/api/caja", {
+      const response = await apiFetch("/api/caja", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...(await getAuthHeaders()) },
         body: JSON.stringify({

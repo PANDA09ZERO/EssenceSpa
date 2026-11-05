@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { requireEmployeeRequest } from "@/lib/employee-api-auth";
 
 let adminClient: ReturnType<typeof createSupabaseAdminClient> | null = null;
 const db = () => (adminClient ??= createSupabaseAdminClient());
@@ -51,17 +52,8 @@ async function getPaidAppointments(start: string, end: string) {
 
 export async function GET(request: NextRequest) {
   try {
-    const accessToken = request.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
-    if (!accessToken) return NextResponse.json({ error: "Debes iniciar sesión para ver los reportes" }, { status: 401 });
-    const { data: { user }, error: userError } = await db().auth.getUser(accessToken);
-    if (userError || !user?.email) return NextResponse.json({ error: "La sesión no es válida" }, { status: 401 });
-    const { data: employee, error: employeeError } = await db()
-      .from("empleados")
-      .select("id")
-      .ilike("email", user.email)
-      .maybeSingle();
-    if (employeeError) throw employeeError;
-    if (!employee) return NextResponse.json({ error: "Solo el equipo puede consultar los reportes" }, { status: 403 });
+    const session = await requireEmployeeRequest(request, { message: "Solo el equipo puede consultar los reportes" });
+    if ("error" in session) return session.error;
 
     const now = new Date();
     const currentMonthStart = getMonthStart(now);

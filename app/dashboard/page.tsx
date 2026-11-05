@@ -7,6 +7,7 @@ import { citaClientName } from "@/components/calendar/cita-utils";
 import { useCallback, useEffect, useState } from "react";
 import { ArrowRight, ArrowUpRight, Calendar, CalendarDays, Calculator, Check, Clock3, RefreshCw, Sparkles, Users, Wallet } from "lucide-react";
 import Link from "next/link";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface Cita { id: string; fecha: string; hora_inicio: string; total: number; estado: string; nombre_invitado?: string | null; telefono_invitado?: string | null; clientes: { nombre: string; apellido: string } | null; servicios: { nombre: string } | null; }
 interface Servicio { id: string; nombre: string; categoria: string | null; precio: number; }
@@ -32,7 +33,7 @@ export default function DashboardPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Tu sesión venció. Inicia sesión nuevamente.");
-      const response = await fetch("/api/dashboard", { signal, cache: "no-store", headers: { Authorization: `Bearer ${session.access_token}` } });
+      const response = await apiFetch("/api/dashboard", { signal, cache: "no-store", headers: { Authorization: `Bearer ${session.access_token}` } });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "No se pudo cargar el resumen");
       if (!signal?.aborted) { setData(result); setUpdatedAt(new Date()); }

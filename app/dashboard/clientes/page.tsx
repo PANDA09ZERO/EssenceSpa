@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Search, Edit2, Trash2, User } from "lucide-react";
 import StatsCard from "@/components/bento/StatCard";
 import CreateResourceModal from "@/components/forms/CreateResourceModal";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface Cliente { id: string; nombre: string; apellido: string; telefono: string | null; email: string | null; }
 
@@ -13,7 +14,7 @@ export default function ClientesPage() {
   const [error, setError] = useState("");
 
   const loadClientes = () => {
-    fetch("/api/clientes").then(async (response) => { const result = await response.json(); if (!response.ok) throw new Error(result.error); setClientes(result.data || []); }).catch((loadError) => setError(loadError instanceof Error ? loadError.message : "No se pudieron cargar los clientes"));
+    apiFetch("/api/clientes").then(async (response) => { const result = await response.json(); if (!response.ok) throw new Error(result.error); setClientes(result.data || []); }).catch((loadError) => setError(loadError instanceof Error ? loadError.message : "No se pudieron cargar los clientes"));
   };
 
   useEffect(() => { loadClientes(); }, []);

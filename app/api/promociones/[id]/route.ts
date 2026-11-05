@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+import { CATALOG_ADMIN, requireEmployeeRequest } from "@/lib/employee-api-auth";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { isValidDateKey } from "@/lib/lima-time";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await requireEmployeeRequest(request, CATALOG_ADMIN);
+  if ("error" in session) return session.error;
+
   const { id } = await params;
   let body: Record<string, unknown>;
   try {
@@ -20,12 +23,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "El descuento debe estar entre 0 y 100" }, { status: 400 });
   }
 
+  const fechaInicio = typeof body.fecha_inicio === "string" && body.fecha_inicio ? body.fecha_inicio : null;
+  const fechaFin = typeof body.fecha_fin === "string" && body.fecha_fin ? body.fecha_fin : null;
+  if ((fechaInicio && !isValidDateKey(fechaInicio)) || (fechaFin && !isValidDateKey(fechaFin))) {
+    return NextResponse.json({ error: "Las fechas no son válidas" }, { status: 400 });
+  }
+
+  const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase.from("promociones").update({
-    nombre: body.nombre.trim(),
-    descripcion: typeof body.descripcion === "string" && body.descripcion.trim() ? body.descripcion.trim() : null,
+    nombre: body.nombre.trim().slice(0, 120),
+    descripcion: typeof body.descripcion === "string" && body.descripcion.trim() ? body.descripcion.trim().slice(0, 500) : null,
     descuento,
-    fecha_inicio: typeof body.fecha_inicio === "string" && body.fecha_inicio ? body.fecha_inicio : null,
-    fecha_fin: typeof body.fecha_fin === "string" && body.fecha_fin ? body.fecha_fin : null,
+    fecha_inicio: fechaInicio,
+    fecha_fin: fechaFin,
     activa: body.activa === true,
   }).eq("id", id).select("id, nombre, descripcion, descuento, fecha_inicio, fecha_fin, activa").single();
 

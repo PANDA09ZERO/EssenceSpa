@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import { AlertTriangle, UserPlus, X } from "lucide-react";
 import type { Appointment } from "./types";
 import { citaClientName } from "./cita-utils";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface Props {
   cita: Appointment;
@@ -36,7 +37,7 @@ export default function ConvertGuestModal({ cita, onClose, onConverted }: Props)
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`/api/citas/${cita.id}/convertir`, {
+      const response = await apiFetch(`/api/citas/${cita.id}/convertir`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

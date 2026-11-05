@@ -10,6 +10,7 @@ import Link from "next/link";
 import { formatTime } from "@/lib/utils";
 import { citaClientName, compareCitaSchedule, citaServiceNames, estadoLabels } from "@/components/calendar/cita-utils";
 import { peruDateKey, shiftDateKey, agendaDateLabel } from "@/lib/appointment-dates";
+import { apiFetch } from "@/lib/api-fetch";
 
 type DateFilter = "ayer" | "hoy" | "manana" | "todas" | "fecha";
 const dateFilters: { value: DateFilter; label: string }[] = [
@@ -28,7 +29,7 @@ export default function CitasPage() {
   const [loading, setLoading] = useState(true);
   const loadCitas = () => {
     setError(""); setLoading(true);
-    return fetch("/api/citas").then(async response => {
+    return apiFetch("/api/citas").then(async response => {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "No se pudieron cargar las citas");
       setCitas(result.data || []);

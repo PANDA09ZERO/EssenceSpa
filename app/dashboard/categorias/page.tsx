@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Edit2, Trash2, X } from "lucide-react";
 import Card from "@/components/bento/Card";
 import CreateResourceModal from "@/components/forms/CreateResourceModal";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface Categoria {
   id: string;
@@ -34,8 +35,8 @@ export default function CategoriasPage() {
     setError("");
     try {
       const [categoriasResponse, serviciosResponse] = await Promise.all([
-        fetch("/api/categorias"),
-        fetch("/api/servicios"),
+        apiFetch("/api/categorias"),
+        apiFetch("/api/servicios"),
       ]);
       const [categoriasResult, serviciosResult] = await Promise.all([
         categoriasResponse.json(),
@@ -73,7 +74,7 @@ export default function CategoriasPage() {
     setGuardando(true);
     setFormError("");
     try {
-      const response = await fetch(`/api/categorias/${categoriaEditando.id}`, {
+      const response = await apiFetch(`/api/categorias/${categoriaEditando.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -99,7 +100,7 @@ export default function CategoriasPage() {
     setCategoriaEliminando(categoria.id);
     setActionError("");
     try {
-      const response = await fetch(`/api/categorias/${categoria.id}`, { method: "DELETE" });
+      const response = await apiFetch(`/api/categorias/${categoria.id}`, { method: "DELETE" });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "No se pudo eliminar la categoría");
       await cargarDatos();

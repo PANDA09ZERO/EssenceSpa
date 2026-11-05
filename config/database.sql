@@ -103,9 +103,6 @@ CREATE TABLE cita_detalles (
   UNIQUE (id_cita, id_servicio)
 );
 
-ALTER TABLE cita_detalles ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Todos pueden ver detalles de citas" ON cita_detalles FOR SELECT USING (true);
-CREATE POLICY "Todos pueden insertar detalles de citas" ON cita_detalles FOR INSERT WITH CHECK (true);
 CREATE INDEX idx_cita_detalles_cita ON cita_detalles(id_cita);
 
 -- ============================================
@@ -178,13 +175,28 @@ ALTER TABLE pagos ADD CONSTRAINT pagos_promocion_fk
   FOREIGN KEY (id_promocion) REFERENCES promociones(id) ON DELETE SET NULL;
 
 -- ============================================
--- POLICY: RLS para clientes
+-- RLS: solo el servidor (service_role) escribe. Las rutas /api validan la
+-- sesión y el rol antes de consultar. Ver migration-rls-hardening.sql.
 -- ============================================
 ALTER TABLE clientes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Todos pueden ver clientes" ON clientes FOR SELECT USING (true);
-CREATE POLICY "Todos pueden insertar clientes" ON clientes FOR INSERT WITH CHECK (true);
-CREATE POLICY "Todos pueden actualizar clientes" ON clientes FOR UPDATE USING (true);
-CREATE POLICY "Todos pueden eliminar clientes" ON clientes FOR DELETE USING (true);
+ALTER TABLE citas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cita_detalles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE servicios ENABLE ROW LEVEL SECURITY;
+ALTER TABLE categorias ENABLE ROW LEVEL SECURITY;
+ALTER TABLE promociones ENABLE ROW LEVEL SECURITY;
+ALTER TABLE configuracion ENABLE ROW LEVEL SECURITY;
+ALTER TABLE empleados ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON empleados, clientes, citas, cita_detalles, servicios, categorias, promociones, configuracion FROM anon, authenticated;
+
+-- Catálogo público: solo lectura filtrada.
+GRANT SELECT ON servicios, promociones TO anon, authenticated;
+CREATE POLICY "Catalogo publico de servicios" ON servicios FOR SELECT TO anon, authenticated USING (estado IS DISTINCT FROM 'inactivo');
+CREATE POLICY "Catalogo publico de promociones" ON promociones FOR SELECT TO anon, authenticated USING (activa = true);
+
+-- Empleados: cada usuario autenticado solo ve su propia fila (sin password_hash).
+GRANT SELECT (id, nombre, apellido, email, rol, cargo, auth_user_id) ON empleados TO authenticated;
+CREATE POLICY "Empleado ve su propia fila" ON empleados FOR SELECT TO authenticated
+  USING (auth_user_id = auth.uid() OR (auth_user_id IS NULL AND lower(email) = lower(auth.jwt() ->> 'email')));
 
 -- Caja, pagos y adicionales: solo el servidor (service_role) accede a estas
 -- tablas. Las rutas /api validan la sesión y el rol antes de consultar.
@@ -194,51 +206,6 @@ ALTER TABLE movimientos_caja ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON pagos FROM anon, authenticated;
 REVOKE ALL ON pago_adicionales FROM anon, authenticated;
 REVOKE ALL ON movimientos_caja FROM anon, authenticated;
-
--- ============================================
--- POLICY: RLS para empleados
--- ============================================
-ALTER TABLE empleados ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Todos pueden ver empleados" ON empleados FOR SELECT USING (true);
-CREATE POLICY "Todos pueden insertar empleados" ON empleados FOR INSERT WITH CHECK (true);
-CREATE POLICY "Todos pueden actualizar empleados" ON empleados FOR UPDATE USING (true);
-CREATE POLICY "Todos pueden eliminar empleados" ON empleados FOR DELETE USING (true);
-
--- ============================================
--- POLICY: RLS para servicios
--- ============================================
-ALTER TABLE servicios ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Todos pueden ver servicios" ON servicios FOR SELECT USING (true);
-CREATE POLICY "Todos pueden insertar servicios" ON servicios FOR INSERT WITH CHECK (true);
-CREATE POLICY "Todos pueden actualizar servicios" ON servicios FOR UPDATE USING (true);
-CREATE POLICY "Todos pueden eliminar servicios" ON servicios FOR DELETE USING (true);
-
--- ============================================
--- POLICY: RLS para citas
--- ============================================
-ALTER TABLE citas ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Todos pueden ver citas" ON citas FOR SELECT USING (true);
-CREATE POLICY "Todos pueden insertar citas" ON citas FOR INSERT WITH CHECK (true);
-CREATE POLICY "Todos pueden actualizar citas" ON citas FOR UPDATE USING (true);
-CREATE POLICY "Todos pueden eliminar citas" ON citas FOR DELETE USING (true);
-
--- ============================================
--- POLICY: RLS para promociones
--- ============================================
-ALTER TABLE promociones ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Todos pueden ver promociones" ON promociones FOR SELECT USING (true);
-CREATE POLICY "Todos pueden insertar promociones" ON promociones FOR INSERT WITH CHECK (true);
-CREATE POLICY "Todos pueden actualizar promociones" ON promociones FOR UPDATE USING (true);
-CREATE POLICY "Todos pueden eliminar promociones" ON promociones FOR DELETE USING (true);
-
--- ============================================
--- POLICY: RLS para configuracion
--- ============================================
-ALTER TABLE configuracion ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Todos pueden ver configuracion" ON configuracion FOR SELECT USING (true);
-CREATE POLICY "Todos pueden insertar configuracion" ON configuracion FOR INSERT WITH CHECK (true);
-CREATE POLICY "Todos pueden actualizar configuracion" ON configuracion FOR UPDATE USING (true);
-CREATE POLICY "Todos pueden eliminar configuracion" ON configuracion FOR DELETE USING (true);
 
 -- ============================================
 -- DATA INICIAL
@@ -384,9 +351,9 @@ REVOKE ALL ON FUNCTION cobrar_cita(UUID, TEXT, DECIMAL, TEXT, UUID, TEXT, JSONB)
 GRANT EXECUTE ON FUNCTION cobrar_cita(UUID, TEXT, DECIMAL, TEXT, UUID, TEXT, JSONB) TO service_role;
 
 -- ============================================
--- EMPLEADO ADMIN POR DEFECTO
+-- EMPLEADO ADMIN INICIAL
 -- ============================================
--- Contraseña: admin123 (en producción usar bcrypt para hash)
-INSERT INTO empleados (nombre, apellido, email, cargo, rol, password_hash, telefono)
-VALUES ('Admin', 'System', 'admin@essencespa.pe', 'Gerente', 'admin', 'admin123', '999888777')
-ON CONFLICT (email) DO NOTHING;
+-- No se guardan contraseñas aquí. Crea primero la cuenta en Supabase Auth
+-- (Authentication → Users → Add user) y luego enlázala:
+-- INSERT INTO empleados (nombre, apellido, email, cargo, rol, auth_user_id)
+-- VALUES ('Admin', 'System', 'admin@essencespa.pe', 'Gerente', 'admin', '<uuid de auth.users>');

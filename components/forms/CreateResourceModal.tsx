@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 interface Field { name: string; label: string; type?: string; required?: boolean; options?: string[]; }
 interface Props { title: string; endpoint: string; fields: Field[]; onCreated?: () => void; includeAuthToken?: boolean; }
 
-export default function CreateResourceModal({ title, endpoint, fields, onCreated, includeAuthToken = false }: Props) {
+export default function CreateResourceModal({ title, endpoint, fields, onCreated }: Props) {
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState<Record<string, string>>({});
   const [error, setError] = useState("");
@@ -21,11 +21,10 @@ export default function CreateResourceModal({ title, endpoint, fields, onCreated
     }));
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (includeAuthToken) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error("Tu sesión venció. Inicia sesión nuevamente.");
-        headers.Authorization = `Bearer ${session.access_token}`;
-      }
+      // Todas las rutas /api exigen sesión; se valida aquí para dar un mensaje claro.
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Tu sesión venció. Inicia sesión nuevamente.");
+      headers.Authorization = `Bearer ${session.access_token}`;
       const response = await fetch(endpoint, { method: "POST", headers, body: JSON.stringify(body) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "No se pudo guardar");

@@ -4,6 +4,7 @@ import { formatTime } from "@/lib/utils";
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight, Clock3, Plus, Trash2, X } from "lucide-react";
 import ClientPicker, { type ClientSelection } from "./ClientPicker";
+import { apiFetch } from "@/lib/api-fetch";
 
 const todayInPeru = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 
@@ -28,7 +29,7 @@ export default function AppointmentModal({ onCreated }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    fetch("/api/citas/opciones")
+    apiFetch("/api/citas/opciones")
       .then(async (response) => { const result = await response.json(); if (!response.ok) throw new Error(result.error || "No se pudieron cargar las opciones"); setClientes(result.clientes || []); setServicios(result.servicios || []); setEmpleados(result.empleados || []); })
       .catch((loadError) => setError(loadError instanceof Error ? loadError.message : "No se pudieron cargar las opciones de la cita"));
   }, [open]);
@@ -75,7 +76,7 @@ export default function AppointmentModal({ onCreated }: Props) {
     }
     setLoading(true); setError("");
     try {
-      const response = await fetch("/api/citas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id_cliente: clientSelection.idCliente, nombre_invitado: clientSelection.idCliente ? null : clientSelection.nombreInvitado.trim() || null, telefono_invitado: clientSelection.idCliente ? null : clientSelection.telefonoInvitado.trim() || null, servicios: formData.servicios, id_empleado: formData.empleado || null, fecha: formData.fecha, hora_inicio: formData.hora, hora_fin: endTime || null, notas: formData.notas }) });
+      const response = await apiFetch("/api/citas", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id_cliente: clientSelection.idCliente, nombre_invitado: clientSelection.idCliente ? null : clientSelection.nombreInvitado.trim() || null, telefono_invitado: clientSelection.idCliente ? null : clientSelection.telefonoInvitado.trim() || null, servicios: formData.servicios, id_empleado: formData.empleado || null, fecha: formData.fecha, hora_inicio: formData.hora, hora_fin: endTime || null, notas: formData.notas }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "No se pudo crear la cita");
       setOpen(false); reset(); onCreated?.();

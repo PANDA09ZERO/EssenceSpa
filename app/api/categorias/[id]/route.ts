@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { CATALOG_ADMIN, requireEmployeeRequest } from "@/lib/employee-api-auth";
+import { readJsonObject } from "@/lib/api-input";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: NextRequest, { params }: RouteContext) {
+  const session = await requireEmployeeRequest(request, CATALOG_ADMIN);
+  if ("error" in session) return session.error;
+
   const { id } = await params;
-  const body = await request.json();
-  const nombre = typeof body.nombre === "string" ? body.nombre.trim() : "";
+  const body = await readJsonObject(request);
+  if (!body) return NextResponse.json({ error: "El cuerpo de la solicitud no es válido" }, { status: 400 });
+  const nombre = typeof body.nombre === "string" ? body.nombre.trim().slice(0, 120) : "";
   if (!nombre) return NextResponse.json({ error: "El nombre de la categoría es obligatorio." }, { status: 400 });
 
   const supabase = createSupabaseAdminClient();
@@ -47,8 +53,8 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     .from("categorias")
     .update({
       nombre,
-      descripcion: typeof body.descripcion === "string" && body.descripcion.trim() ? body.descripcion.trim() : null,
-      icono: typeof body.icono === "string" && body.icono.trim() ? body.icono.trim() : null,
+      descripcion: typeof body.descripcion === "string" && body.descripcion.trim() ? body.descripcion.trim().slice(0, 500) : null,
+      icono: typeof body.icono === "string" && body.icono.trim() ? body.icono.trim().slice(0, 16) : null,
     })
     .eq("id", id)
     .select()
@@ -80,7 +86,10 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
   return NextResponse.json({ data });
 }
 
-export async function DELETE(_: NextRequest, { params }: RouteContext) {
+export async function DELETE(request: NextRequest, { params }: RouteContext) {
+  const session = await requireEmployeeRequest(request, CATALOG_ADMIN);
+  if ("error" in session) return session.error;
+
   const { id } = await params;
   const supabase = createSupabaseAdminClient();
   const { data: categoria, error: lookupError } = await supabase

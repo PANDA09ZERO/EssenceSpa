@@ -6,6 +6,7 @@ import { AlertTriangle, Save, Trash2, X } from "lucide-react";
 import type { Appointment } from "./types";
 import { citaClientName, estadoLabels } from "./cita-utils";
 import ClientPicker, { type ClientSelection } from "./ClientPicker";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface Option { id: string; nombre: string; apellido?: string | null; precio?: number; duracion?: number; telefono?: string | null; }
 interface OptionsState { clientes: Option[]; servicios: Option[]; empleados: Option[]; }
@@ -34,7 +35,7 @@ export default function AppointmentEditModal({ cita, onClose, onSaved }: Props) 
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/citas/opciones")
+    apiFetch("/api/citas/opciones")
       .then(async (response) => {
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "No se pudieron cargar las opciones");
@@ -64,7 +65,7 @@ export default function AppointmentEditModal({ cita, onClose, onSaved }: Props) 
     setLoading(true);
     setError("");
     try {
-      const response = await fetch(`/api/citas/${cita.id}`, {
+      const response = await apiFetch(`/api/citas/${cita.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

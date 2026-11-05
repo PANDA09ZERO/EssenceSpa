@@ -5,6 +5,7 @@ import StatsCard from "@/components/bento/StatCard";
 import Card from "@/components/bento/Card";
 import { BarChart3, Calendar, PieChart, TrendingUp } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface ReportData {
   stats: {
@@ -30,7 +31,7 @@ export default function ReportesPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Tu sesión venció. Inicia sesión nuevamente.");
-      const response = await fetch("/api/reportes", {
+      const response = await apiFetch("/api/reportes", {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       const result = await response.json();

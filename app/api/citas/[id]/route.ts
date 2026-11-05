@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { isValidDateKey } from "@/lib/lima-time";
+import { requireEmployeeRequest } from "@/lib/employee-api-auth";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { conflictMessage, findEmpleadoConflict, toHHMM, toMinutes } from "@/lib/cita-conflicts";
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
 const CITAS_SELECT = "id, id_cliente, id_empleado, id_servicio, fecha, hora_inicio, hora_fin, estado, notas, total, nombre_invitado, telefono_invitado, clientes(nombre, apellido), servicios(nombre, precio, duracion), empleados(nombre, apellido), cita_detalles(id_servicio, servicios(nombre, duracion))";
 const ESTADOS_PERMITIDOS = new Set(["pendiente", "confirmada", "en_progreso", "completada", "cancelada"]);
 
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await requireEmployeeRequest(request);
+  if ("error" in session) return session.error;
+  const supabase = createSupabaseAdminClient();
   const { id } = await params;
   const { data, error } = await supabase.from("citas").select(CITAS_SELECT).eq("id", id).maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
@@ -16,6 +19,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await requireEmployeeRequest(request);
+  if ("error" in session) return session.error;
+  const supabase = createSupabaseAdminClient();
   const { id } = await params;
   let body: Record<string, unknown>;
   try {
@@ -72,9 +78,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const estado = typeof body.estado === "string" && ESTADOS_PERMITIDOS.has(body.estado) ? body.estado : existing.estado;
   const notas = body.notas === undefined
     ? existing.notas
-    : (typeof body.notas === "string" && body.notas.trim() ? body.notas.trim() : null);
+    : (typeof body.notas === "string" && body.notas.trim() ? body.notas.trim().slice(0, 1000) : null);
 
-  if (!fecha) return NextResponse.json({ error: "La fecha es obligatoria" }, { status: 400 });
+  if (!isValidDateKey(fecha)) return NextResponse.json({ error: "La fecha no es válida" }, { status: 400 });
+  if (serviceIds.length > 20) return NextResponse.json({ error: "Demasiados servicios en una cita" }, { status: 400 });
   const startMinutes = toMinutes(horaInicio);
   if (startMinutes === null) return NextResponse.json({ error: "La hora de inicio no es válida" }, { status: 400 });
   if (!idCliente && !finalNombreInvitado) return NextResponse.json({ error: "El cliente o el nombre del invitado es obligatorio" }, { status: 400 });

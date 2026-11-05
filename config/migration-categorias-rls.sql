@@ -1,4 +1,7 @@
 -- ============================================
+-- OBSOLETA — NO EJECUTAR. Reemplazada por migration-rls-hardening.sql.
+-- Estas políticas permiten que cualquiera (anon) modifique categorías.
+-- ============================================
 -- MIGRATION: Políticas RLS para categorias
 --
 -- Contexto: la tabla categorias tenia RLS habilitado pero sin

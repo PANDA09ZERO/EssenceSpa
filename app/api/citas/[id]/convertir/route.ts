@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+import { requireEmployeeRequest } from "@/lib/employee-api-auth";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
 /**
  * Convierte una cita de invitado en una cita con cliente registrado.
@@ -9,6 +8,9 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
  * cita. Si el enlace falla, elimina el cliente recién creado.
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await requireEmployeeRequest(request);
+  if ("error" in session) return session.error;
+  const supabase = createSupabaseAdminClient();
   const { id } = await params;
   let body: Record<string, unknown> = {};
   try {

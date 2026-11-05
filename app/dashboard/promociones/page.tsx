@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { CalendarDays, Edit2, Search, Tag, X } from "lucide-react";
 import CreateResourceModal from "@/components/forms/CreateResourceModal";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface Promocion {
   id: string;
@@ -35,7 +36,7 @@ export default function PromocionesPage() {
   const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
-    fetch("/api/promociones")
+    apiFetch("/api/promociones")
       .then(async (response) => {
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "No se pudieron cargar las promociones");
@@ -68,7 +69,7 @@ export default function PromocionesPage() {
     setGuardando(true);
     setError("");
     try {
-      const response = await fetch(`/api/promociones/${promocionEditando.id}`, {
+      const response = await apiFetch(`/api/promociones/${promocionEditando.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

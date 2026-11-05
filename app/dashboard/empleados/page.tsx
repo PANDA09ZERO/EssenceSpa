@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { BriefcaseBusiness, Edit2, Mail, Phone, Search, Trash2, UserCog, X } from "lucide-react";
 import CreateResourceModal from "@/components/forms/CreateResourceModal";
 import { supabase } from "@/lib/supabase";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface Empleado {
   id: string;
@@ -40,7 +41,7 @@ export default function EmpleadosPage() {
   const [empleadoEliminando, setEmpleadoEliminando] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/empleados")
+    apiFetch("/api/empleados")
       .then(async (response) => {
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "No se pudo cargar el equipo");
@@ -90,7 +91,7 @@ export default function EmpleadosPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Tu sesión venció. Inicia sesión nuevamente.");
-      const response = await fetch(`/api/empleados/${empleadoEditando.id}`, {
+      const response = await apiFetch(`/api/empleados/${empleadoEditando.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -117,7 +118,7 @@ export default function EmpleadosPage() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Tu sesión venció. Inicia sesión nuevamente.");
-      const response = await fetch(`/api/empleados/${empleado.id}`, {
+      const response = await apiFetch(`/api/empleados/${empleado.id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${session.access_token}` },
       });

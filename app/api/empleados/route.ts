@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-import { authorizeAdminEmployeeRequest } from "@/lib/employee-api-auth";
+import { authorizeAdminEmployeeRequest, escapeLikePattern, requireEmployeeRequest } from "@/lib/employee-api-auth";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
+const ROLES_PERMITIDOS = new Set(["admin", "manicurista", "recepcionista"]);
 
 function specialtiesFrom(value: unknown): string[] | null {
   const specialties = Array.isArray(value)
@@ -13,7 +12,11 @@ function specialtiesFrom(value: unknown): string[] | null {
   return cleaned.length ? cleaned : null;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const session = await requireEmployeeRequest(request);
+  if ("error" in session) return session.error;
+
+  const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase.from("empleados").select("id, nombre, apellido, email, telefono, cargo, rol, especialidad, disponibilidad, created_at, updated_at").order("nombre");
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json({ data });
@@ -43,7 +46,8 @@ export async function POST(request: NextRequest) {
   const email = body.email.trim().toLowerCase();
   const nombre = body.nombre.trim();
   const apellido = body.apellido.trim();
-  const rol = typeof body.rol === "string" ? body.rol : "manicurista";
+  const rol = typeof body.rol === "string" && body.rol ? body.rol : "manicurista";
+  if (!ROLES_PERMITIDOS.has(rol)) return NextResponse.json({ error: "El rol seleccionado no es válido" }, { status: 400 });
 
   let admin;
   try {
@@ -54,7 +58,7 @@ export async function POST(request: NextRequest) {
 
   const { data: existingEmployee, error: existingEmployeeError } = await admin.from("empleados")
     .select("id")
-    .ilike("email", email)
+    .ilike("email", escapeLikePattern(email))
     .maybeSingle();
   if (existingEmployeeError) return NextResponse.json({ error: existingEmployeeError.message }, { status: 500 });
   if (existingEmployee) return NextResponse.json({ error: "Ya existe un empleado con este email" }, { status: 409 });

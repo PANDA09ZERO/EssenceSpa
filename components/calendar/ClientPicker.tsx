@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { Check, Plus, Search, UserRound, X } from "lucide-react";
+import { apiFetch } from "@/lib/api-fetch";
 
 export interface ClientOption {
   id: string;
@@ -124,7 +125,7 @@ export default function ClientPicker({ clients, value, onChange, onClientCreated
     setSaving(true);
     setError("");
     try {
-      const response = await fetch("/api/clientes", {
+      const response = await apiFetch("/api/clientes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

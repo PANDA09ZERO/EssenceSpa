@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Clock, DollarSign, Edit2, Filter, Plus, Search, Sparkles, Trash2, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { apiFetch } from "@/lib/api-fetch";
 
 interface Servicio {
   id: string;
@@ -61,8 +62,8 @@ export default function ServiciosPage() {
     const loadData = async () => {
       try {
         const [serviciosResponse, categoriasResponse] = await Promise.all([
-          fetch("/api/servicios"),
-          fetch("/api/categorias"),
+          apiFetch("/api/servicios"),
+          apiFetch("/api/categorias"),
         ]);
         const [serviciosResult, categoriasResult] = await Promise.all([
           serviciosResponse.json(),
@@ -149,7 +150,7 @@ export default function ServiciosPage() {
       imagen,
       };
 
-      const response = await fetch(servicioEditando ? `/api/servicios/${servicioEditando.id}` : "/api/servicios", {
+      const response = await apiFetch(servicioEditando ? `/api/servicios/${servicioEditando.id}` : "/api/servicios", {
         method: servicioEditando ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),

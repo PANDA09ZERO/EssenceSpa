@@ -55,7 +55,9 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
         setUser({
           id: sessionUser.id,
           email: sessionUser.email || "",
-          role: sessionUser.user_metadata?.role || "cliente",
+          // user_metadata lo puede editar el propio usuario: nunca se usa como rol.
+          // El rol real llega desde la tabla empleados (efecto de abajo).
+          role: "cliente",
           name: sessionUser.user_metadata?.name || sessionUser.email?.split("@")[0] || "",
         });
       } else { setUser(null); }
@@ -79,26 +81,32 @@ export function SupabaseProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // El rol real vive en la tabla empleados; los metadatos pueden faltar en
-  // cuentas antiguas, así que se consulta y se usa como fuente de verdad.
+  // El rol real vive en la tabla empleados. La política RLS solo deja leer
+  // la fila del propio usuario; además se filtra explícitamente por el id
+  // (o por el email literal en cuentas antiguas aún no vinculadas).
   useEffect(() => {
     const email = user?.email;
-    if (!email) { setRoleLoading(false); return; }
+    const userId = user?.id;
+    if (!email || !userId) { setRoleLoading(false); return; }
     let active = true;
     setRoleLoading(true);
     void (async () => {
       try {
-        const { data } = await supabase.from("empleados").select("rol").ilike("email", email).maybeSingle();
+        let { data } = await supabase.from("empleados").select("rol").eq("auth_user_id", userId).maybeSingle();
+        if (!data) {
+          const literalEmail = email.replace(/[\\%_]/g, (char) => `\\${char}`);
+          ({ data } = await supabase.from("empleados").select("rol").is("auth_user_id", null).ilike("email", literalEmail).maybeSingle());
+        }
         if (!active || !data?.rol) return;
-        setUser(current => current && current.email === email ? { ...current, role: data.rol } : current);
+        setUser(current => current && current.id === userId ? { ...current, role: data.rol } : current);
       } catch {
-        // Si falla la consulta se mantiene el rol de los metadatos.
+        // Si falla la consulta el usuario queda sin permisos de equipo.
       } finally {
         if (active) setRoleLoading(false);
       }
     })();
     return () => { active = false; };
-  }, [user?.email, roleVersion]);
+  }, [user?.email, user?.id, roleVersion]);
 
   useEffect(() => {
     if (!loading && !user && !signingOutRef.current && pathname.startsWith("/dashboard")) {
