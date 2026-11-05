@@ -50,6 +50,10 @@ REVOKE ALL ON empleados, clientes, citas, cita_detalles, servicios, categorias, 
 GRANT ALL ON empleados, clientes, citas, cita_detalles, servicios, categorias, promociones, configuracion
   TO service_role;
 
+-- cierres_caja ya no tenía políticas, pero conservaba privilegios de tabla.
+REVOKE ALL ON cierres_caja FROM anon, authenticated;
+GRANT ALL ON cierres_caja TO service_role;
+
 -- --------------------------------------------
 -- 3. Catálogo público (página principal): solo lectura filtrada
 -- --------------------------------------------
