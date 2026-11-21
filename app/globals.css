@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+.font-display { font-variant-numeric: lining-nums; }
 .public-catalog .text-brand-text-light { color: #62615d; }
 .public-catalog .text-brand-terracotta { color: #706255; }
 .public-catalog footer .text-brand-text-light { color: #d4cec7; }
