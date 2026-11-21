@@ -24,6 +24,8 @@
   outline-offset: 3px;
 }
 .dashboard-shell .input-field { background: white; border-color: #d6d0c7; }
+/* Playfair en negrita pesa demasiado junto a Inter: los títulos del panel usan peso medio. */
+.dashboard-shell .font-display:is(.font-bold, .font-semibold) { font-weight: 500; }
 
 @layer components {
   .bento-card {

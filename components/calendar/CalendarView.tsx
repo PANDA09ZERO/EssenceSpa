@@ -1,28 +1,46 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { eachDayOfInterval, endOfMonth, format, isToday, startOfMonth } from "date-fns";
+import { eachDayOfInterval, endOfMonth, format, startOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
-import { Ban, ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Clock, Eye, List, Pencil, Phone, Scissors, Trash2, User, Users, UserPlus, UserRound, X } from "lucide-react";
+import { Ban, CalendarDays, ChevronLeft, ChevronRight, Clock, Pencil, Phone, Scissors, Trash2, User, Users, UserPlus, UserRound, X } from "lucide-react";
 import { formatTime } from "@/lib/utils";
 import AppointmentEditModal from "./AppointmentEditModal";
 import ConvertGuestModal from "./ConvertGuestModal";
 import WorkerDayGrid from "./WorkerDayGrid";
 import { apiFetch } from "@/lib/api-fetch";
+import { peruDateKey, shiftDateKey } from "@/lib/appointment-dates";
 import type { Appointment } from "./types";
 import { citaClientName, citaDurationMinutes, citaServiceNames, estadoLabels, fullName, isGuestCita, statusBadges, statusColors, compareCitaSchedule } from "./cita-utils";
 
 export type { Appointment };
 
-interface Props { appointments: Appointment[]; onUpdated?: () => void; focusDate?: string | null; }
+interface Props {
+  appointments: Appointment[];
+  onUpdated?: () => void;
+  /** Fecha elegida en la agenda (yyyy-MM-dd); null = todas las fechas. */
+  focusDate?: string | null;
+  /** Al tocar un día del mes se elige esa fecha en la agenda. */
+  onSelectDate?: (date: string) => void;
+}
 
-export default function CalendarView({ appointments, onUpdated, focusDate }: Props) {
+// "9:00 a.m." → "9a" y "10:30 p.m." → "10:30p" para que entre en la celda del mes.
+function shortTime(time: string) {
+  return formatTime(time).replace(":00 ", " ").replace(" a.m.", "a").replace(" p.m.", "p");
+}
+
+function firstName(name: string) {
+  return name.split(" ")[0] || name;
+}
+
+export default function CalendarView({ appointments, onUpdated, focusDate, onSelectDate }: Props) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [selectedCitaId, setSelectedCitaId] = useState<string | null>(null);
   const [editingCita, setEditingCita] = useState<Appointment | null>(null);
   const [convertingCita, setConvertingCita] = useState<Appointment | null>(null);
-  const [viewMode, setViewMode] = useState<"lista" | "trabajadores">("trabajadores");
+  // La vista por trabajador es la principal; el mes sirve para saltar entre días.
+  const [view, setView] = useState<"dia" | "mes">("dia");
+  const [localDay, setLocalDay] = useState(() => peruDateKey());
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -37,20 +55,29 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
   const month = currentDate.getMonth();
   const days = eachDayOfInterval({ start: startOfMonth(currentDate), end: endOfMonth(currentDate) });
   const leadingDays = (startOfMonth(currentDate).getDay() + 6) % 7;
+  const trailingDays = (7 - ((leadingDays + days.length) % 7)) % 7;
+  const todayKey = peruDateKey();
+  const selectedDate = focusDate || null;
+  // Día que muestra la vista por trabajador: el de la agenda o, si se ven todas las fechas, hoy.
+  const dayKey = onSelectDate ? (selectedDate || todayKey) : localDay;
+  const chooseDay = (key: string) => { if (onSelectDate) onSelectDate(key); else setLocalDay(key); };
+  const viewingCurrentMonth = format(currentDate, "yyyy-MM") === todayKey.slice(0, 7);
+  const goToday = () => { setCurrentDate(new Date(`${todayKey}T12:00:00`)); chooseDay(todayKey); };
+  const stepDay = (delta: number) => chooseDay(shiftDateKey(dayKey, delta));
+  const stepMonth = (delta: number) => setCurrentDate(new Date(year, month + delta, 1));
   const appointmentsByDate = [...appointments].sort(compareCitaSchedule).reduce<Record<string, Appointment[]>>((result, appointment) => {
     (result[appointment.fecha] ||= []).push(appointment);
     return result;
   }, {});
 
-  const dayCitas = selectedDay ? (appointmentsByDate[selectedDay] || []) : [];
-  const selectedCita = selectedCitaId ? appointments.find((cita) => cita.id === selectedCitaId) || null : null;
-  // Detalle solo si la cita sigue en el día seleccionado (si cambió de fecha
-  // al editar, se vuelve a la lista del día).
-  const detailCita = selectedCita && selectedDay && selectedCita.fecha === selectedDay ? selectedCita : null;
+  const dayCitas = appointmentsByDate[dayKey] || [];
+  const workerCount = new Set(dayCitas.map((cita) => cita.id_empleado || "sin-asignar")).size;
+  const detailCita = selectedCitaId ? appointments.find((cita) => cita.id === selectedCitaId) || null : null;
 
-  const openDay = (key: string) => { setSelectedDay(key); setSelectedCitaId(null); };
-  const openCita = (key: string, citaId: string) => { setSelectedDay(key); setSelectedCitaId(citaId); };
-  const closeDayModal = () => { setSelectedDay(null); setSelectedCitaId(null); };
+  const openCita = (citaId: string) => setSelectedCitaId(citaId);
+  const closeDetail = () => setSelectedCitaId(null);
+  // En el mes, tocar un día lo abre en la vista por trabajador.
+  const openDayView = (key: string) => { chooseDay(key); setView("dia"); };
 
   const runCitaAction = async (cita: Appointment, options: RequestInit) => {
     setActionBusy(true);
@@ -76,117 +103,125 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
   const deleteCita = (cita: Appointment) => runCitaAction(cita, { method: "DELETE" });
 
   useEffect(() => {
-    if (!selectedDay) return;
+    if (!selectedCitaId) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       if (editingCita) setEditingCita(null);
-      else if (selectedCitaId) setSelectedCitaId(null);
-      else { setSelectedDay(null); setSelectedCitaId(null); }
+      else setSelectedCitaId(null);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selectedDay, selectedCitaId, editingCita]);
+  }, [selectedCitaId, editingCita]);
 
   return (
     <>
       <div>
-        <div className="flex items-center justify-between p-6 pb-4">
-          <button onClick={() => setCurrentDate(new Date(year, month - 1))} className="p-2 rounded-xl hover:bg-brand-cream transition-colors" aria-label="Mes anterior"><ChevronLeft /></button>
-          <h2 className="font-display text-xl font-bold">{format(currentDate, "MMMM yyyy", { locale: es })}</h2>
-          <button onClick={() => setCurrentDate(new Date(year, month + 1))} className="p-2 rounded-xl hover:bg-brand-cream transition-colors" aria-label="Mes siguiente"><ChevronRight /></button>
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 pb-4 pt-5 sm:px-6">
+          <div className="min-w-0">
+            <div role="group" aria-label="Vista del calendario" className="mb-3 inline-flex rounded-full bg-[#F5F3EE] p-1">
+              <button type="button" aria-pressed={view === "dia"} onClick={() => setView("dia")} className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition-colors ${view === "dia" ? "bg-white text-brand-text shadow-sm" : "text-stone-500 hover:text-brand-text"}`}><Users size={14} /> Por trabajador</button>
+              <button type="button" aria-pressed={view === "mes"} onClick={() => { setCurrentDate(new Date(`${dayKey}T12:00:00`)); setView("mes"); }} className={`inline-flex min-h-9 items-center gap-1.5 rounded-full px-4 text-xs font-semibold transition-colors ${view === "mes" ? "bg-white text-brand-text shadow-sm" : "text-stone-500 hover:text-brand-text"}`}><CalendarDays size={14} /> Mes</button>
+            </div>
+            <h2 className="font-display text-2xl font-medium first-letter:uppercase">
+              {view === "dia" ? format(new Date(`${dayKey}T12:00:00`), "EEEE d 'de' MMMM", { locale: es }) : format(currentDate, "MMMM yyyy", { locale: es })}
+            </h2>
+            {view === "dia" && <p className="mt-1 text-xs text-stone-500">{dayCitas.length ? `${dayCitas.length === 1 ? "1 cita" : `${dayCitas.length} citas`} · ${workerCount === 1 ? "1 trabajador" : `${workerCount} trabajadores`}` : "Sin citas"}</p>}
+          </div>
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={goToday} disabled={view === "dia" ? dayKey === todayKey : viewingCurrentMonth} className="mr-1 min-h-10 rounded-full border border-stone-200 px-4 text-xs font-semibold transition-colors hover:border-brand-green disabled:opacity-40 disabled:hover:border-stone-200">Hoy</button>
+            <button type="button" onClick={() => (view === "dia" ? stepDay(-1) : stepMonth(-1))} className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-[#F5F3EE]" aria-label={view === "dia" ? "Día anterior" : "Mes anterior"}><ChevronLeft size={20} /></button>
+            <button type="button" onClick={() => (view === "dia" ? stepDay(1) : stepMonth(1))} className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-[#F5F3EE]" aria-label={view === "dia" ? "Día siguiente" : "Mes siguiente"}><ChevronRight size={20} /></button>
+          </div>
         </div>
-        <div className="grid grid-cols-7 gap-px bg-brand-cream p-px">
-          {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => <div key={day} className="bg-white text-center text-xs font-medium text-brand-text-light py-2">{day}</div>)}
-          {Array.from({ length: leadingDays }, (_, index) => <div key={`empty-${index}`} className="bg-white min-h-[80px]" />)}
+        {view === "dia" && (
+          <div className="px-3 pb-5 sm:px-6">
+            {dayCitas.length
+              ? <WorkerDayGrid appointments={dayCitas} onSelect={(cita) => openCita(cita.id)} />
+              : <div className="flex min-h-48 flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 px-6 py-10 text-center"><CalendarDays size={22} strokeWidth={1.4} className="text-stone-400" /><p className="mt-3 text-sm text-stone-600">No hay citas para este día.</p><button type="button" onClick={() => { setCurrentDate(new Date(`${dayKey}T12:00:00`)); setView("mes"); }} className="mt-3 min-h-10 text-xs font-semibold underline underline-offset-4">Buscar en el mes</button></div>}
+          </div>
+        )}
+        {view === "mes" && <>
+        <div className="grid grid-cols-7 border-t border-stone-100">
+          {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => <div key={day} className="py-2 text-center text-xs font-medium text-stone-500">{day}</div>)}
+        </div>
+        <div className="grid grid-cols-7 gap-px border-y border-stone-100 bg-stone-100">
+          {Array.from({ length: leadingDays }, (_, index) => <div key={`lead-${index}`} className="min-h-14 bg-[#FAF9F6] sm:min-h-24" />)}
           {days.map((day) => {
             const key = format(day, "yyyy-MM-dd");
             const apps = appointmentsByDate[key] || [];
-            const isSelected = selectedDay === key;
+            const active = apps.filter((app) => app.estado !== "cancelada");
+            const isSelected = dayKey === key;
+            const today = key === todayKey;
+            const past = key < todayKey;
+            const dayLabel = format(day, "EEEE d 'de' MMMM", { locale: es });
             return (
-              <div key={key} className={`relative bg-white min-h-[80px] p-2 transition-colors ${isToday(day) ? "ring-2 ring-brand-green ring-inset" : ""} ${isSelected ? "bg-brand-green/10" : ""}`}>
-                {apps.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => openDay(key)}
-                    className="absolute inset-0 z-0 hover:bg-brand-green/10 transition-colors cursor-pointer"
-                    aria-label={`Ver ${apps.length === 1 ? "1 cita" : `${apps.length} citas`} del ${format(day, "d 'de' MMMM")}`}
-                  />
-                )}
-                <span className={`relative z-10 pointer-events-none text-sm ${isToday(day) ? "font-bold text-brand-green" : "text-brand-text"}`}>{format(day, "d")}</span>
-                <div className="relative z-10 flex flex-wrap gap-1 mt-1 justify-center items-center">
-                  {apps.slice(0, 3).map((app) => (
+              <div key={key} className={`relative min-h-14 p-1.5 sm:min-h-24 sm:p-2 ${isSelected ? "bg-[#F5F3EE]" : "bg-white"}`}>
+                <button
+                  type="button"
+                  onClick={() => openDayView(key)}
+                  aria-pressed={isSelected}
+                  aria-label={`${dayLabel}${apps.length ? `, ${apps.length === 1 ? "1 cita" : `${apps.length} citas`}` : ", sin citas"}`}
+                  className={`absolute inset-0 transition-colors hover:bg-[#F5F3EE] ${isSelected ? "ring-2 ring-inset ring-brand-green" : ""}`}
+                />
+                <div className="pointer-events-none relative flex items-center justify-between gap-1">
+                  <span className={`flex h-7 w-7 items-center justify-center rounded-full text-sm tabular-nums ${today ? "bg-brand-green font-semibold text-white" : past ? "text-stone-400" : "text-brand-text"}`}>{format(day, "d")}</span>
+                  {active.length > 0 && <span className="hidden text-[11px] font-medium text-stone-500 sm:inline">{active.length}</span>}
+                </div>
+                {/* Móvil: puntos por estado */}
+                <div className="pointer-events-none relative mt-1 flex flex-wrap justify-center gap-0.5 sm:hidden">
+                  {apps.slice(0, 4).map((app) => <span key={app.id} className={`h-1.5 w-1.5 rounded-full ${statusColors[app.estado] || "bg-stone-400"}`} />)}
+                </div>
+                {/* Escritorio: primeras citas del día */}
+                <div className="relative mt-1 hidden space-y-0.5 sm:block">
+                  {apps.slice(0, 2).map((app) => (
                     <button
                       key={app.id}
                       type="button"
-                      onClick={() => openCita(key, app.id)}
-                      className={`w-2.5 h-2.5 rounded-full transition-transform hover:scale-150 ${statusColors[app.estado] || "bg-gray-400"}`}
+                      onClick={() => openCita(app.id)}
                       title={`${formatTime(app.hora_inicio)} · ${citaClientName(app)} · ${citaServiceNames(app).join(", ")}`}
-                      aria-label={`Ver cita de ${citaClientName(app)} a las ${formatTime(app.hora_inicio)}`}
-                    />
+                      className={`flex w-full items-center gap-1 rounded-md px-0.5 py-0.5 text-left text-[11px] leading-4 transition-colors hover:bg-white ${app.estado === "cancelada" ? "text-stone-400 line-through" : "text-brand-text"}`}
+                    >
+                      <span aria-hidden="true" className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusColors[app.estado] || "bg-stone-400"}`} />
+                      <span className="shrink-0 tabular-nums text-stone-500">{shortTime(app.hora_inicio)}</span>
+                      <span className="truncate">{firstName(citaClientName(app))}</span>
+                    </button>
                   ))}
-                  {apps.length > 3 && (
-                    <button type="button" onClick={() => openDay(key)} className="text-[10px] font-semibold text-brand-text-light hover:text-brand-green px-1" aria-label="Ver todas las citas del día">+{apps.length - 3}</button>
+                  {apps.length > 2 && (
+                    <button type="button" onClick={() => openDayView(key)} className="w-full rounded-md px-1 py-0.5 text-left text-[11px] font-medium text-stone-500 hover:bg-white hover:text-brand-text">+{apps.length - 2} más</button>
                   )}
                 </div>
               </div>
             );
           })}
+          {Array.from({ length: trailingDays }, (_, index) => <div key={`trail-${index}`} className="min-h-14 bg-[#FAF9F6] sm:min-h-24" />)}
         </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6">
+          <ul aria-label="Estados de las citas" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-600">
+            {Object.entries(estadoLabels).map(([estado, label]) => <li key={estado} className="flex items-center gap-1.5"><span aria-hidden="true" className={`h-2 w-2 rounded-full ${statusColors[estado]}`} />{label}</li>)}
+          </ul>
+        </div>
+        </>}
       </div>
-      {selectedDay && (
-        <div className="fixed inset-0 bg-brand-green/40 backdrop-blur-sm z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Citas del día" onClick={closeDayModal}>
-          <div className={`bg-white rounded-3xl shadow-bento w-full ${!detailCita && viewMode === "trabajadores" ? "max-w-4xl" : "max-w-2xl"} max-h-[92vh] overflow-y-auto`} onClick={(event) => event.stopPropagation()}>
-            <div className="p-6 bg-gradient-to-r from-brand-green to-brand-green-dark text-white flex items-start justify-between gap-4">
+      {detailCita && (
+        <div className="fixed inset-0 bg-brand-green/40 backdrop-blur-sm z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Detalle de la cita" onClick={closeDetail}>
+          <div className={`bg-white rounded-3xl shadow-bento w-full max-w-2xl max-h-[92vh] overflow-y-auto`} onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between gap-4 border-b border-stone-100 p-6">
               <div className="min-w-0">
-                <p className="text-white/70 text-sm">Agenda Essence</p>
-                <h2 className="font-display text-xl font-bold mt-1 truncate">
-                  {detailCita ? "Detalle de la cita" : `Citas del ${format(new Date(`${selectedDay}T12:00:00`), "EEEE d 'de' MMMM yyyy", { locale: es })}`}
+                <h2 className="font-display text-2xl font-medium first-letter:uppercase">
+                  Detalle de la cita
                 </h2>
               </div>
-              <button type="button" onClick={closeDayModal} className="p-2 rounded-xl hover:bg-white/20 shrink-0" aria-label="Cerrar"><X size={20} /></button>
+              <button type="button" onClick={closeDetail} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full hover:bg-[#F5F3EE]" aria-label="Cerrar"><X size={20} /></button>
             </div>
 
-            {!detailCita && (
-              <div className="p-6 space-y-3">
-                <p className="text-sm text-brand-text-light">
-                  {dayCitas.length === 1 ? "1 cita programada" : `${dayCitas.length} citas programadas`} · Selecciona una para ver el detalle
-                </p>
-                <div role="group" aria-label="Vista de la agenda" className="inline-flex rounded-xl bg-brand-cream p-1">
-                  <button type="button" aria-pressed={viewMode === "trabajadores"} onClick={() => setViewMode("trabajadores")} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${viewMode === "trabajadores" ? "bg-white text-brand-green shadow-sm" : "text-brand-text-light"}`}><Users size={14} /> Por trabajador</button>
-                  <button type="button" aria-pressed={viewMode === "lista"} onClick={() => setViewMode("lista")} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${viewMode === "lista" ? "bg-white text-brand-green shadow-sm" : "text-brand-text-light"}`}><List size={14} /> Lista</button>
-                </div>
-                {dayCitas.length === 0 && <p className="text-sm text-brand-text-light">No hay citas programadas para este día.</p>}
-                {viewMode === "trabajadores" && <WorkerDayGrid appointments={dayCitas} onSelect={(cita) => setSelectedCitaId(cita.id)} />}
-                {viewMode === "lista" && dayCitas.map((cita) => (
-                  <button key={cita.id} type="button" onClick={() => setSelectedCitaId(cita.id)} className="w-full text-left p-4 rounded-2xl bg-brand-cream hover:bg-brand-green/10 transition-colors flex items-center gap-4">
-                    <div className="w-20 shrink-0 text-center">
-                      <p className="font-display font-bold text-brand-green">{formatTime(cita.hora_inicio)}</p>
-                      <p className="text-[11px] text-brand-text-light">{cita.hora_fin ? formatTime(cita.hora_fin) : `${citaDurationMinutes(cita)} min`}</p>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-sm truncate">{citaClientName(cita)}</p>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full ${statusBadges[cita.estado] || "bg-gray-100 text-gray-600"}`}>{estadoLabels[cita.estado] || cita.estado}</span>
-                      </div>
-                      <p className="text-xs text-brand-text-light truncate">{citaServiceNames(cita).join(", ")} · {fullName(cita.empleados) || "Sin trabajador asignado"}</p>
-                    </div>
-                    <Eye size={18} className="text-brand-green shrink-0" />
-                  </button>
-                ))}
-              </div>
-            )}
             {detailCita && (
               <div className="p-6 space-y-5">
-                <button type="button" onClick={() => setSelectedCitaId(null)} className="inline-flex items-center gap-1 text-sm font-semibold text-brand-green hover:underline">
-                  <ArrowLeft size={16} /> Volver a las citas del día
-                </button>
-
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
                     <h3 className="font-display text-lg font-bold truncate">{citaClientName(detailCita)}</h3>
-                    <p className="text-xs text-brand-text-light capitalize">{format(new Date(`${detailCita.fecha}T12:00:00`), "EEEE d 'de' MMMM yyyy", { locale: es })}</p>
+                    <p className="text-xs text-brand-text-light first-letter:uppercase">{format(new Date(`${detailCita.fecha}T12:00:00`), "EEEE d 'de' MMMM yyyy", { locale: es })}</p>
                     {isGuestCita(detailCita) && (
-                      <span className="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">Invitado</span>
+                      <span className="mt-1 inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">Invitado</span>
                     )}
                   </div>
                   <span className={`text-xs px-3 py-1 rounded-full ${statusBadges[detailCita.estado] || "bg-gray-100 text-gray-600"}`}>{estadoLabels[detailCita.estado] || detailCita.estado}</span>
@@ -207,7 +242,7 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
                     <div key={row.label} className="flex items-start gap-3 p-3 rounded-2xl bg-brand-cream">
                       <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-brand-green shrink-0"><row.icon size={16} /></div>
                       <div className="min-w-0">
-                        <p className="text-[11px] uppercase tracking-wider text-brand-text-light">{row.label}</p>
+                        <p className="text-xs text-brand-text-light">{row.label}</p>
                         <p className="text-sm font-medium text-brand-text break-words">{row.value}</p>
                       </div>
                     </div>
@@ -237,12 +272,12 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3">
                   {isGuestCita(detailCita) && (
-                    <button type="button" onClick={() => setConvertingCita(detailCita)} className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-brand-green/30 bg-brand-green/5 py-3 font-semibold text-brand-green transition-colors hover:bg-brand-green/10">
+                    <button type="button" onClick={() => setConvertingCita(detailCita)} className="flex flex-[1.4] items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-brand-green/30 bg-brand-green/5 px-4 py-3 text-sm font-semibold text-brand-green transition-colors hover:bg-brand-green/10">
                       <UserPlus size={16} /> Registrar como cliente
                     </button>
                   )}
-                  <button type="button" onClick={() => setEditingCita(detailCita)} className="btn-primary flex-1 flex items-center justify-center gap-2"><Pencil size={16} /> Editar cita</button>
-                  <button type="button" onClick={closeDayModal} className="flex-1 py-3 rounded-xl bg-brand-cream text-brand-text font-semibold hover:bg-brand-cream/80 transition-colors">Cerrar</button>
+                  <button type="button" onClick={() => setEditingCita(detailCita)} className="btn-primary flex flex-1 items-center justify-center gap-2 whitespace-nowrap text-sm"><Pencil size={16} /> Editar cita</button>
+                  <button type="button" onClick={closeDetail} className="flex-1 py-3 rounded-xl bg-brand-cream text-sm text-brand-text font-semibold hover:bg-brand-cream/80 transition-colors">Cerrar</button>
                 </div>
               </div>
             )}

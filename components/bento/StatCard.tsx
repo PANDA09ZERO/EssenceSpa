@@ -1,7 +1,6 @@
 import { LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { clsx } from "clsx";
 
 interface StatCardProps {
   icon: LucideIcon;
@@ -13,12 +12,12 @@ interface StatCardProps {
 
 export default function StatCard({ icon: Icon, label, value, color = "text-brand-green", href }: StatCardProps) {
   const content = (
-    <div className="bento-card cursor-pointer hover:shadow-bento-hover transition-shadow">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 bg-brand-green/10 ${color}`}>
-        <Icon size={24} />
+    <div className={clsx("bento-card flex h-full flex-col", href && "transition-shadow hover:shadow-bento-hover")}>
+      <div className={`mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-[#F5F3EE] ${color}`}>
+        <Icon size={20} strokeWidth={1.6} />
       </div>
-      <p className="font-display text-2xl font-bold">{value}</p>
-      <p className="text-sm text-brand-text-light">{label}</p>
+      <p className="text-xs text-stone-600">{label}</p>
+      <p className="mt-1 break-words text-2xl font-semibold tabular-nums tracking-tight sm:text-3xl">{value}</p>
     </div>
   );
 

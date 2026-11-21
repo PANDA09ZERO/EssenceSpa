@@ -6,6 +6,7 @@ import Card from "@/components/bento/Card";
 import { BarChart3, Calendar, PieChart, TrendingUp } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { apiFetch } from "@/lib/api-fetch";
+import { formatServiceName } from "@/lib/utils";
 
 interface ReportData {
   stats: {
@@ -94,7 +95,7 @@ export default function ReportesPage() {
               <div key={servicio.nombre} className="flex items-center gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="truncate font-medium">{servicio.nombre}</p>
+                    <p className="truncate font-medium">{formatServiceName(servicio.nombre)}</p>
                     <span className="shrink-0 text-sm text-brand-text-light">{servicio.cantidad} {servicio.cantidad === 1 ? "servicio" : "servicios"}</span>
                   </div>
                   <div className="mt-2 h-2 w-full rounded-full bg-brand-cream">

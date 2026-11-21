@@ -11,6 +11,16 @@ interface InstallPrompt extends Event {
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "dev";
 const MOBILE_USER_AGENT = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
 const INSTALLED_STORAGE_KEY = "essence-system-installed";
+const DISMISSED_STORAGE_KEY = "essence-install-dismissed-until";
+const DISMISS_DAYS = 14;
+
+function readDismissed() {
+  try { return Number(window.localStorage.getItem(DISMISSED_STORAGE_KEY) || 0) > Date.now(); } catch { return false; }
+}
+
+function saveDismissed() {
+  try { window.localStorage.setItem(DISMISSED_STORAGE_KEY, String(Date.now() + DISMISS_DAYS * 86_400_000)); } catch { /* almacenamiento no disponible */ }
+}
 
 function isMobileDevice() {
   return MOBILE_USER_AGENT.test(navigator.userAgent)
@@ -43,6 +53,7 @@ export default function InstallSystem() {
   const [instructions, setInstructions] = useState(false);
   const [busy, setBusy] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   const versionRef = useRef(APP_VERSION);
 
   useEffect(() => {
@@ -68,6 +79,7 @@ export default function InstallSystem() {
     };
 
     syncDisplay();
+    setDismissed(readDismissed());
     setMobile(isMobileDevice());
     setIos(/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
 
@@ -167,8 +179,10 @@ export default function InstallSystem() {
     </section>;
   }
 
+  if (dismissed) return null;
+
   return <section aria-label="Instalación del sistema" className="mb-7 rounded-2xl border border-stone-200 bg-white p-4 sm:px-5">
-    <div className="flex flex-wrap items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEE9E0]"><Smartphone size={20} strokeWidth={1.5} /></span><div className="min-w-0 flex-1"><p className="text-sm font-semibold">Essence siempre a mano</p><p className="mt-1 text-xs leading-5 text-stone-600">Instala el panel en tu teléfono. El acceso requiere tu sesión.</p></div><button type="button" disabled={busy} onClick={() => void install()} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-stone-300 px-4 py-2 text-xs font-semibold hover:bg-stone-50 disabled:opacity-50"><Download size={16} />{busy ? "Abriendo…" : "Instalar sistema"}</button></div>
+    <div className="flex flex-wrap items-center gap-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEE9E0]"><Smartphone size={20} strokeWidth={1.5} /></span><div className="min-w-0 flex-1"><p className="text-sm font-semibold">Essence siempre a mano</p><p className="mt-1 text-xs leading-5 text-stone-600">Instala el panel en tu teléfono. El acceso requiere tu sesión.</p></div><button type="button" disabled={busy} onClick={() => void install()} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-stone-300 px-4 py-2 text-xs font-semibold hover:bg-stone-50 disabled:opacity-50"><Download size={16} />{busy ? "Abriendo…" : "Instalar sistema"}</button><button type="button" onClick={() => { saveDismissed(); setDismissed(true); }} className="inline-flex min-h-11 items-center px-3 text-xs font-medium text-stone-600 hover:text-stone-950">Ahora no</button></div>
     {instructions && <div id="system-install-help" className="mt-4 rounded-xl bg-[#F5F3EE] p-4"><div className="flex items-start justify-between gap-3"><h2 className="text-sm font-semibold">{ios ? "Instalar en iPhone o iPad" : "Añadir el sistema a tu dispositivo"}</h2><button type="button" aria-label="Cerrar instrucciones" onClick={() => setInstructions(false)} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full hover:bg-stone-200"><X size={17} /></button></div><ol className="mt-2 list-decimal space-y-2 pl-5 text-xs leading-6 text-stone-600">{ios ? <><li>Abre este panel en Safari.</li><li>Toca Compartir y luego Añadir a pantalla de inicio.</li><li>Activa Abrir como app web si aparece y toca Añadir.</li></> : <><li>Abre este panel en Chrome o Edge.</li><li>En el menú del navegador, busca Instalar aplicación o Añadir a pantalla de inicio.</li><li>Confirma el nombre Essence Gestión y la instalación.</li></>}</ol><p className="mt-3 text-xs leading-5 text-stone-600">Si el navegador no ofrece la opción, abre el enlace en Chrome o Safari actualizado. El sistema necesita conexión a internet; al expirar tu sesión tendrás que iniciar sesión nuevamente.</p></div>}
   </section>;
 }

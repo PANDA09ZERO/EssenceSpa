@@ -10,7 +10,7 @@ interface CardProps {
 export default function Card({ children, className, title }: CardProps) {
   return (
     <div className={clsx("bento-card", className || "")}>
-      {title && <h3 className="font-display text-lg font-bold mb-4">{title}</h3>}
+      {title && <h2 className="mb-4 font-display text-xl font-medium">{title}</h2>}
       {children}
     </div>
   );

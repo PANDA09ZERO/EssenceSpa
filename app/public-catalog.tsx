@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowDown, Check, Clock3, Facebook, Instagram, MapPin, Menu, MessageCircle, Plus, Search, ShoppingBag, Tag, X } from "lucide-react";
 import type { PublicPromotion, PublicService } from "./page";
+import { formatServiceName as displayName } from "@/lib/utils";
 import coverImage from "../imagenes/WhatsApp Image 2026-09-26 at 10.11.45 PM.jpeg";
 import detailImageOne from "../imagenes/WhatsApp Image 2026-09-26 at 10.11.46 PM (1).jpeg";
 import detailImageTwo from "../imagenes/WhatsApp Image 2026-09-26 at 10.11.46 PM.jpeg";
@@ -34,19 +35,6 @@ interface Props {
 function formatPrice(price: number) {
   const amount = Number(price);
   return `S/ ${Number.isInteger(amount) ? amount : amount.toFixed(2)}`;
-}
-
-const LOWERCASE_WORDS = new Set(["de", "del", "la", "las", "el", "los", "y", "con", "en", "a", "o", "para", "por"]);
-
-// Los nombres se registran en MAYÚSCULAS; en serif pesan demasiado y se leen peor.
-function displayName(name: string) {
-  const trimmed = name.trim();
-  if (trimmed !== trimmed.toLocaleUpperCase("es") || !/[A-ZÁÉÍÓÚÑ]/.test(trimmed)) return trimmed;
-  return trimmed
-    .toLocaleLowerCase("es")
-    .split(/\s+/)
-    .map((word, index) => (index > 0 && LOWERCASE_WORDS.has(word) ? word : word.charAt(0).toLocaleUpperCase("es") + word.slice(1)))
-    .join(" ");
 }
 
 const WHATSAPP_URL = "https://wa.me/51917650720";

@@ -1,20 +1,21 @@
 import type { Appointment } from "./types";
+import { formatServiceName } from "@/lib/utils";
 
 // Presentación de estados de citas (calendario y paneles de detalle).
 export const statusColors: Record<string, string> = {
-  confirmada: "bg-green-500",
-  pendiente: "bg-yellow-500",
-  en_progreso: "bg-blue-500",
-  completada: "bg-purple-500",
-  cancelada: "bg-gray-400",
+  confirmada: "bg-emerald-600",
+  pendiente: "bg-amber-500",
+  en_progreso: "bg-sky-600",
+  completada: "bg-stone-500",
+  cancelada: "bg-stone-300",
 };
 
 export const statusBadges: Record<string, string> = {
-  confirmada: "bg-green-100 text-green-700",
-  pendiente: "bg-yellow-100 text-yellow-700",
-  en_progreso: "bg-blue-100 text-blue-700",
-  completada: "bg-purple-100 text-purple-700",
-  cancelada: "bg-gray-100 text-gray-600",
+  confirmada: "bg-emerald-50 text-emerald-800",
+  pendiente: "bg-amber-50 text-amber-800",
+  en_progreso: "bg-sky-50 text-sky-800",
+  completada: "bg-stone-100 text-stone-600",
+  cancelada: "bg-stone-100 text-stone-500 line-through",
 };
 
 export const estadoLabels: Record<string, string> = {
@@ -65,8 +66,8 @@ export function citaServiceNames(cita: Appointment): string[] {
   const names = (cita.cita_detalles || [])
     .map((detail) => detail.servicios?.nombre)
     .filter((name): name is string => Boolean(name));
-  if (names.length > 0) return names;
-  return cita.servicios?.nombre ? [cita.servicios.nombre] : [];
+  if (names.length > 0) return names.map(formatServiceName);
+  return cita.servicios?.nombre ? [formatServiceName(cita.servicios.nombre)] : [];
 }
 
 // Duración total en minutos: desde los detalles, el servicio o el rango de horas.

@@ -11,11 +11,11 @@ const PX_PER_MIN = 1.2;
 const SIN_ASIGNAR = "sin-asignar";
 
 const blockClasses: Record<string, string> = {
-  confirmada: "bg-green-50 border-green-500 text-green-800",
-  pendiente: "bg-yellow-50 border-yellow-500 text-yellow-800",
-  en_progreso: "bg-blue-50 border-blue-500 text-blue-800",
-  completada: "bg-purple-50 border-purple-500 text-purple-800",
-  cancelada: "bg-gray-100 border-gray-400 text-gray-500 line-through",
+  confirmada: "bg-emerald-50 border-emerald-600 text-emerald-900",
+  pendiente: "bg-amber-50 border-amber-500 text-amber-900",
+  en_progreso: "bg-sky-50 border-sky-600 text-sky-900",
+  completada: "bg-stone-100 border-stone-500 text-stone-700",
+  cancelada: "bg-stone-50 border-stone-300 text-stone-500 line-through",
 };
 
 function toMinutes(hhmm: string | null | undefined): number | null {
@@ -60,8 +60,8 @@ export default function WorkerDayGrid({ appointments, onSelect }: Props) {
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-brand-cream">
-      <div className="grid min-w-max" style={{ gridTemplateColumns: `56px repeat(${columns.length}, minmax(160px, 1fr))` }}>
-        <div className="border-b border-brand-cream bg-brand-cream/40" />
+      <div className="grid min-w-max" style={{ gridTemplateColumns: `64px repeat(${columns.length}, minmax(160px, 1fr))` }}>
+        <div className="sticky left-0 z-20 border-b border-brand-cream bg-[#FAF9F6]" />
         {columns.map((column) => (
           <div key={column.key} className="border-b border-l border-brand-cream bg-brand-cream/40 px-3 py-2">
             <p className="truncate text-sm font-semibold text-brand-text">{column.label}</p>
@@ -69,10 +69,10 @@ export default function WorkerDayGrid({ appointments, onSelect }: Props) {
           </div>
         ))}
 
-        <div className="relative text-[11px] text-brand-text-light" style={{ height: bodyHeight }}>
+        <div className="sticky left-0 z-20 bg-white text-[11px] text-brand-text-light" style={{ height: bodyHeight }}>
           {hours.map((minute) => (
-            <div key={minute} className="absolute left-0 right-0 px-2 -translate-y-2" style={{ top: (minute - startMinutes) * PX_PER_MIN }}>
-              {formatTime(`${String(minute / 60).padStart(2, "0")}:00`)}
+            <div key={minute} className="absolute left-0 right-0 -translate-y-2 whitespace-nowrap px-2" style={{ top: (minute - startMinutes) * PX_PER_MIN }}>
+              {formatTime(`${String(minute / 60).padStart(2, "0")}:00`).replace(":00", "")}
             </div>
           ))}
         </div>
@@ -91,7 +91,7 @@ export default function WorkerDayGrid({ appointments, onSelect }: Props) {
                   type="button"
                   onClick={() => onSelect(cita)}
                   title={`${formatTime(cita.hora_inicio)} · ${citaClientName(cita)}`}
-                  className={`absolute left-1 right-1 overflow-hidden rounded-lg border-l-4 px-2 py-1 text-left text-xs transition-shadow hover:shadow-sm ${blockClasses[cita.estado] || "bg-gray-50 border-gray-400 text-gray-700"}`}
+                  className={`absolute left-1 right-1 flex flex-col justify-start overflow-hidden rounded-lg border-l-4 px-2 py-1 text-left text-xs transition-shadow hover:shadow-sm ${blockClasses[cita.estado] || "bg-gray-50 border-gray-400 text-gray-700"}`}
                   style={{ top: (start - startMinutes) * PX_PER_MIN, height: duration * PX_PER_MIN - 4 }}
                 >
                   <p className="truncate font-semibold">{formatTime(cita.hora_inicio)} · {citaClientName(cita)}</p>

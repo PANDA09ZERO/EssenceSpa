@@ -54,3 +54,17 @@ export function getDayName(date: Date): string {
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 10);
 }
+
+const LOWERCASE_WORDS = new Set(["de", "del", "la", "las", "el", "los", "y", "con", "en", "a", "o", "para", "por"]);
+
+// Los nombres de servicios se registran en MAYÚSCULAS; para mostrarlos se pasan a
+// formato título ("MANICURA EN GEL" → "Manicura en Gel"). Respeta nombres ya escritos con minúsculas.
+export function formatServiceName(name: string | null | undefined): string {
+  const trimmed = (name || "").trim();
+  if (trimmed !== trimmed.toLocaleUpperCase("es") || !/[A-ZÁÉÍÓÚÑ]/.test(trimmed)) return trimmed;
+  return trimmed
+    .toLocaleLowerCase("es")
+    .split(/\s+/)
+    .map((word, index) => (index > 0 && LOWERCASE_WORDS.has(word) ? word : word.charAt(0).toLocaleUpperCase("es") + word.slice(1)))
+    .join(" ");
+}

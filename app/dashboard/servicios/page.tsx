@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Clock, DollarSign, Edit2, Filter, Plus, Search, Sparkles, Trash2, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { apiFetch } from "@/lib/api-fetch";
+import { formatServiceName } from "@/lib/utils";
 
 interface Servicio {
   id: string;
@@ -238,8 +239,8 @@ export default function ServiciosPage() {
       {!loading && !error && filtered.length === 0 && <div className="bento-card text-center text-brand-text-light">No hay servicios que coincidan con tu búsqueda.</div>}
       {!loading && !error && filtered.length > 0 && <div className="bento-grid-3">{filtered.map((servicio) => <div key={servicio.id} className="bento-card group hover:scale-105 transition-transform">
         <div className="flex items-start justify-between mb-4">{servicio.imagen ? <img src={servicio.imagen} alt={`Referencia de ${servicio.nombre}`} className="w-16 h-16 rounded-2xl object-cover" /> : <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-brand-green/20 to-brand-green/10 flex items-center justify-center text-3xl">{servicio.icono || "✨"}</div>}{servicio.estado === "activo" && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Activo</span>}</div>
-        <h3 className="font-display text-lg font-bold mb-2">{servicio.nombre}</h3><p className="text-sm text-brand-text-light mb-2">{servicio.categoria}</p>{servicio.descripcion && <p className="text-sm text-brand-text-light mb-4 line-clamp-2">{servicio.descripcion}</p>}
-        <div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2 text-brand-text-light"><Clock size={16} /><span className="text-sm">{servicio.duracion} min</span></div><div className="flex items-center gap-2 text-brand-green"><DollarSign size={16} /><span className="font-bold">S/ {Number(servicio.precio).toFixed(2)}</span></div></div>
+        <h3 className="font-display text-lg font-medium mb-2">{formatServiceName(servicio.nombre)}</h3><p className="text-sm text-brand-text-light mb-2">{servicio.categoria}</p>{servicio.descripcion && <p className="text-sm text-brand-text-light mb-4 line-clamp-2">{servicio.descripcion}</p>}
+        <div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2 text-brand-text-light"><Clock size={16} /><span className="text-sm">{servicio.duracion} min</span></div><span className="font-semibold text-brand-green">S/ {Number(servicio.precio).toFixed(2)}</span></div>
         <div className="flex gap-2 pt-4 border-t border-gray-100"><button type="button" onClick={() => abrirFormulario(servicio)} className="flex-1 py-2 rounded-xl bg-brand-green/10 text-brand-green hover:bg-brand-green/20 transition-colors flex items-center justify-center gap-2"><Edit2 size={16} /> Editar</button><button className="py-2 px-4 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-colors" aria-label={`Eliminar ${servicio.nombre}`}><Trash2 size={16} /></button></div>
       </div>)}</div>}
     </div>

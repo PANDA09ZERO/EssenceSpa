@@ -84,7 +84,7 @@ export default function AppointmentModal({ onCreated }: Props) {
     finally { setLoading(false); }
   };
 
-  if (!open) return <button onClick={() => setOpen(true)} className="btn-primary flex items-center gap-2"><Plus size={18} /> Nueva Cita</button>;
+  if (!open) return <button onClick={() => setOpen(true)} type="button" className="btn-primary inline-flex min-h-11 items-center gap-2 rounded-full"><Plus size={18} /> Nueva cita</button>;
 
   return <div className="fixed inset-0 bg-brand-green/40 backdrop-blur-sm z-[70] flex items-center justify-center p-4"><div className="appointment-modal bg-white rounded-3xl shadow-bento w-full max-w-lg max-h-[92vh] overflow-y-auto"><div className="p-6 bg-gradient-to-r from-brand-green to-brand-green-dark text-white"><div className="flex items-start justify-between"><div><p className="text-white/70 text-sm">Agenda Essence</p><h2 className="font-display text-2xl font-bold mt-1">Nueva cita</h2></div><button onClick={() => setOpen(false)} className="p-2 rounded-xl hover:bg-white/20" aria-label="Cerrar"><X size={20} /></button></div><p className="text-white/80 text-sm mt-3">Selecciona uno o varios servicios para calcular el total.</p></div>
     <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-5">
