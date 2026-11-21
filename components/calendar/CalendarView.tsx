@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { eachDayOfInterval, endOfMonth, format, isToday, startOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
-import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Clock, Eye, Pencil, Phone, Scissors, User, UserPlus, UserRound, X } from "lucide-react";
+import { Ban, ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, Clock, Eye, List, Pencil, Phone, Scissors, Trash2, User, Users, UserPlus, UserRound, X } from "lucide-react";
 import { formatTime } from "@/lib/utils";
 import AppointmentEditModal from "./AppointmentEditModal";
 import ConvertGuestModal from "./ConvertGuestModal";
+import WorkerDayGrid from "./WorkerDayGrid";
+import { apiFetch } from "@/lib/api-fetch";
 import type { Appointment } from "./types";
 import { citaClientName, citaDurationMinutes, citaServiceNames, estadoLabels, fullName, isGuestCita, statusBadges, statusColors, compareCitaSchedule } from "./cita-utils";
 
@@ -20,6 +22,12 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
   const [selectedCitaId, setSelectedCitaId] = useState<string | null>(null);
   const [editingCita, setEditingCita] = useState<Appointment | null>(null);
   const [convertingCita, setConvertingCita] = useState<Appointment | null>(null);
+  const [viewMode, setViewMode] = useState<"lista" | "trabajadores">("trabajadores");
+  const [actionBusy, setActionBusy] = useState(false);
+  const [actionError, setActionError] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  useEffect(() => { setConfirmDelete(false); setActionError(""); }, [selectedCitaId]);
 
   useEffect(() => {
     if (focusDate) setCurrentDate(new Date(`${focusDate}T12:00:00`));
@@ -43,6 +51,29 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
   const openDay = (key: string) => { setSelectedDay(key); setSelectedCitaId(null); };
   const openCita = (key: string, citaId: string) => { setSelectedDay(key); setSelectedCitaId(citaId); };
   const closeDayModal = () => { setSelectedDay(null); setSelectedCitaId(null); };
+
+  const runCitaAction = async (cita: Appointment, options: RequestInit) => {
+    setActionBusy(true);
+    setActionError("");
+    try {
+      const response = await apiFetch(`/api/citas/${cita.id}`, options);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "No se pudo completar la acción");
+      setSelectedCitaId(null);
+      setConfirmDelete(false);
+      onUpdated?.();
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "No se pudo completar la acción");
+    } finally {
+      setActionBusy(false);
+    }
+  };
+  const cancelCita = (cita: Appointment) => runCitaAction(cita, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ estado: "cancelada" }),
+  });
+  const deleteCita = (cita: Appointment) => runCitaAction(cita, { method: "DELETE" });
 
   useEffect(() => {
     if (!selectedDay) return;
@@ -104,7 +135,7 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
       </div>
       {selectedDay && (
         <div className="fixed inset-0 bg-brand-green/40 backdrop-blur-sm z-[70] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Citas del día" onClick={closeDayModal}>
-          <div className="bg-white rounded-3xl shadow-bento w-full max-w-2xl max-h-[92vh] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
+          <div className={`bg-white rounded-3xl shadow-bento w-full ${!detailCita && viewMode === "trabajadores" ? "max-w-4xl" : "max-w-2xl"} max-h-[92vh] overflow-y-auto`} onClick={(event) => event.stopPropagation()}>
             <div className="p-6 bg-gradient-to-r from-brand-green to-brand-green-dark text-white flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-white/70 text-sm">Agenda Essence</p>
@@ -120,8 +151,13 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
                 <p className="text-sm text-brand-text-light">
                   {dayCitas.length === 1 ? "1 cita programada" : `${dayCitas.length} citas programadas`} · Selecciona una para ver el detalle
                 </p>
+                <div role="group" aria-label="Vista de la agenda" className="inline-flex rounded-xl bg-brand-cream p-1">
+                  <button type="button" aria-pressed={viewMode === "trabajadores"} onClick={() => setViewMode("trabajadores")} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${viewMode === "trabajadores" ? "bg-white text-brand-green shadow-sm" : "text-brand-text-light"}`}><Users size={14} /> Por trabajador</button>
+                  <button type="button" aria-pressed={viewMode === "lista"} onClick={() => setViewMode("lista")} className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${viewMode === "lista" ? "bg-white text-brand-green shadow-sm" : "text-brand-text-light"}`}><List size={14} /> Lista</button>
+                </div>
                 {dayCitas.length === 0 && <p className="text-sm text-brand-text-light">No hay citas programadas para este día.</p>}
-                {dayCitas.map((cita) => (
+                {viewMode === "trabajadores" && <WorkerDayGrid appointments={dayCitas} onSelect={(cita) => setSelectedCitaId(cita.id)} />}
+                {viewMode === "lista" && dayCitas.map((cita) => (
                   <button key={cita.id} type="button" onClick={() => setSelectedCitaId(cita.id)} className="w-full text-left p-4 rounded-2xl bg-brand-cream hover:bg-brand-green/10 transition-colors flex items-center gap-4">
                     <div className="w-20 shrink-0 text-center">
                       <p className="font-display font-bold text-brand-green">{formatTime(cita.hora_inicio)}</p>
@@ -183,6 +219,22 @@ export default function CalendarView({ appointments, onUpdated, focusDate }: Pro
                   <p className="text-sm text-brand-text bg-brand-cream rounded-xl p-3 whitespace-pre-wrap">{detailCita.notas?.trim() || "Sin observaciones."}</p>
                 </div>
 
+                {actionError && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-600">{actionError}</p>}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  {detailCita.estado !== "cancelada" && detailCita.estado !== "completada" && (
+                    <button type="button" disabled={actionBusy} onClick={() => void cancelCita(detailCita)} className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-200 py-3 font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"><Ban size={16} /> {actionBusy ? "Cancelando…" : "Cancelar cita"}</button>
+                  )}
+                  {detailCita.estado !== "completada" && detailCita.estado !== "en_progreso" && !confirmDelete && (
+                    <button type="button" disabled={actionBusy} onClick={() => setConfirmDelete(true)} className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-red-200 py-3 font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"><Trash2 size={16} /> Eliminar cita</button>
+                  )}
+                  {confirmDelete && (
+                    <div className="flex flex-1 flex-col gap-3 rounded-xl bg-red-50 p-3 sm:flex-row sm:items-center">
+                      <p className="flex-1 text-sm text-red-700">¿Eliminar la cita del registro? No se puede deshacer.</p>
+                      <button type="button" onClick={() => setConfirmDelete(false)} className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-brand-text">Conservar</button>
+                      <button type="button" disabled={actionBusy} onClick={() => void deleteCita(detailCita)} className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">Sí, eliminar</button>
+                    </div>
+                  )}
+                </div>
                 <div className="flex flex-col sm:flex-row gap-3">
                   {isGuestCita(detailCita) && (
                     <button type="button" onClick={() => setConvertingCita(detailCita)} className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-brand-green/30 bg-brand-green/5 py-3 font-semibold text-brand-green transition-colors hover:bg-brand-green/10">

@@ -183,3 +183,25 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   return NextResponse.json({ data: updated });
 }
 
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await requireEmployeeRequest(request);
+  if ("error" in session) return session.error;
+  const supabase = createSupabaseAdminClient();
+  const { id } = await params;
+
+  const { data: existing, error: findError } = await supabase.from("citas").select("id, estado").eq("id", id).maybeSingle();
+  if (findError) return NextResponse.json({ error: findError.message }, { status: 400 });
+  if (!existing) return NextResponse.json({ error: "Cita no encontrada" }, { status: 404 });
+  if (existing.estado === "completada" || existing.estado === "en_progreso") {
+    return NextResponse.json({ error: "Una cita en curso o completada no se puede eliminar. Cancélala en su lugar." }, { status: 409 });
+  }
+
+  const { error: detailsError } = await supabase.from("cita_detalles").delete().eq("id_cita", id);
+  if (detailsError) return NextResponse.json({ error: detailsError.message }, { status: 400 });
+
+  const { error: deleteError } = await supabase.from("citas").delete().eq("id", id);
+  if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 400 });
+
+  return NextResponse.json({ data: { id } });
+}
