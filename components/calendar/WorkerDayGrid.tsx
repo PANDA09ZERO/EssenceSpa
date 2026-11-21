@@ -3,20 +3,19 @@
 import { useMemo } from "react";
 import { formatTime } from "@/lib/utils";
 import type { Appointment } from "./types";
-import { citaClientName, citaDurationMinutes, citaServiceNames, fullName } from "./cita-utils";
+import { citaClientName, citaDurationMinutes, citaServiceNames, estadoLabels, fullName, statusColors } from "./cita-utils";
+import { buildWorkerColors, type WorkerColorFn } from "./worker-colors";
 
-interface Props { appointments: Appointment[]; onSelect: (cita: Appointment) => void; }
+interface Props {
+  appointments: Appointment[];
+  onSelect: (cita: Appointment) => void;
+  /** Colores por trabajador calculados sobre todas las citas, para que no cambien entre días. */
+  colorFor?: WorkerColorFn;
+}
 
 const PX_PER_MIN = 1.2;
 const SIN_ASIGNAR = "sin-asignar";
 
-const blockClasses: Record<string, string> = {
-  confirmada: "bg-emerald-50 border-emerald-600 text-emerald-900",
-  pendiente: "bg-amber-50 border-amber-500 text-amber-900",
-  en_progreso: "bg-sky-50 border-sky-600 text-sky-900",
-  completada: "bg-stone-100 border-stone-500 text-stone-700",
-  cancelada: "bg-stone-50 border-stone-300 text-stone-500 line-through",
-};
 
 function toMinutes(hhmm: string | null | undefined): number | null {
   if (!hhmm) return null;
@@ -24,7 +23,8 @@ function toMinutes(hhmm: string | null | undefined): number | null {
   return Number.isFinite(hours) && Number.isFinite(minutes) ? hours * 60 + minutes : null;
 }
 
-export default function WorkerDayGrid({ appointments, onSelect }: Props) {
+export default function WorkerDayGrid({ appointments, onSelect, colorFor }: Props) {
+  const workerColor = useMemo(() => colorFor || buildWorkerColors(appointments), [colorFor, appointments]);
   const columns = useMemo(() => {
     const map = new Map<string, { key: string; label: string; citas: Appointment[] }>();
     for (const cita of appointments) {
@@ -62,12 +62,18 @@ export default function WorkerDayGrid({ appointments, onSelect }: Props) {
     <div className="overflow-x-auto rounded-2xl border border-brand-cream">
       <div className="grid min-w-max" style={{ gridTemplateColumns: `64px repeat(${columns.length}, minmax(160px, 1fr))` }}>
         <div className="sticky left-0 z-20 border-b border-brand-cream bg-[#FAF9F6]" />
-        {columns.map((column) => (
-          <div key={column.key} className="border-b border-l border-brand-cream bg-brand-cream/40 px-3 py-2">
-            <p className="truncate text-sm font-semibold text-brand-text">{column.label}</p>
-            <p className="text-xs text-brand-text-light">{column.citas.length === 1 ? "1 cita" : `${column.citas.length} citas`}</p>
+        {columns.map((column) => {
+          const color = workerColor(column.key === SIN_ASIGNAR ? null : column.key);
+          return (
+          <div key={column.key} className="flex items-center gap-2.5 border-b border-l border-brand-cream bg-[#FAF9F6] px-3 py-2.5" style={{ boxShadow: `inset 0 3px 0 ${color.solid}` }}>
+            <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold" style={{ backgroundColor: color.soft, color: color.text, boxShadow: `inset 0 0 0 1.5px ${color.solid}` }}>{column.label.split(" ").filter(Boolean).map((part) => part[0]).join("").slice(0, 2).toUpperCase()}</span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-brand-text">{column.label}</p>
+              <p className="text-xs text-brand-text-light">{column.citas.length === 1 ? "1 cita" : `${column.citas.length} citas`}</p>
+            </div>
           </div>
-        ))}
+          );
+        })}
 
         <div className="sticky left-0 z-20 bg-white text-[11px] text-brand-text-light" style={{ height: bodyHeight }}>
           {hours.map((minute) => (
@@ -85,17 +91,20 @@ export default function WorkerDayGrid({ appointments, onSelect }: Props) {
             {column.citas.map((cita) => {
               const start = toMinutes(cita.hora_inicio) ?? startMinutes;
               const duration = Math.max(citaDurationMinutes(cita), 30);
+              const color = workerColor(cita.id_empleado);
+              const cancelled = cita.estado === "cancelada";
               return (
                 <button
                   key={cita.id}
                   type="button"
                   onClick={() => onSelect(cita)}
-                  title={`${formatTime(cita.hora_inicio)} · ${citaClientName(cita)}`}
-                  className={`absolute left-1 right-1 flex flex-col justify-start overflow-hidden rounded-lg border-l-4 px-2 py-1 text-left text-xs transition-shadow hover:shadow-sm ${blockClasses[cita.estado] || "bg-gray-50 border-gray-400 text-gray-700"}`}
-                  style={{ top: (start - startMinutes) * PX_PER_MIN, height: duration * PX_PER_MIN - 4 }}
+                  title={`${formatTime(cita.hora_inicio)} · ${citaClientName(cita)} · ${estadoLabels[cita.estado] || cita.estado}`}
+                  className={`absolute left-1 right-1 flex flex-col justify-start overflow-hidden rounded-lg border-l-4 px-2 py-1 text-left text-xs transition-shadow hover:shadow-sm ${cancelled ? "opacity-60" : ""}`}
+                  style={{ top: (start - startMinutes) * PX_PER_MIN, height: duration * PX_PER_MIN - 4, backgroundColor: color.soft, borderColor: color.solid, color: color.text }}
                 >
-                  <p className="truncate font-semibold">{formatTime(cita.hora_inicio)} · {citaClientName(cita)}</p>
+                  <p className={`truncate font-semibold ${cancelled ? "line-through" : ""}`}>{formatTime(cita.hora_inicio)} · {citaClientName(cita)}</p>
                   <p className="truncate">{citaServiceNames(cita).join(", ") || "Servicio"}</p>
+                  <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] opacity-90"><span aria-hidden="true" className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusColors[cita.estado] || "bg-stone-400"}`} />{estadoLabels[cita.estado] || cita.estado}</p>
                 </button>
               );
             })}

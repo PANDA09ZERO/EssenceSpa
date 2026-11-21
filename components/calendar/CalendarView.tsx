@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { eachDayOfInterval, endOfMonth, format, startOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import { Ban, CalendarDays, ChevronLeft, ChevronRight, Clock, Pencil, Phone, Scissors, Trash2, User, Users, UserPlus, UserRound, X } from "lucide-react";
@@ -8,10 +8,11 @@ import { formatTime } from "@/lib/utils";
 import AppointmentEditModal from "./AppointmentEditModal";
 import ConvertGuestModal from "./ConvertGuestModal";
 import WorkerDayGrid from "./WorkerDayGrid";
+import { buildWorkerColors, type WorkerColorFn } from "./worker-colors";
 import { apiFetch } from "@/lib/api-fetch";
 import { peruDateKey, shiftDateKey } from "@/lib/appointment-dates";
 import type { Appointment } from "./types";
-import { citaClientName, citaDurationMinutes, citaServiceNames, estadoLabels, fullName, isGuestCita, statusBadges, statusColors, compareCitaSchedule } from "./cita-utils";
+import { citaClientName, citaDurationMinutes, citaServiceNames, estadoLabels, fullName, isGuestCita, statusBadges, compareCitaSchedule } from "./cita-utils";
 
 export type { Appointment };
 
@@ -22,6 +23,8 @@ interface Props {
   focusDate?: string | null;
   /** Al tocar un día del mes se elige esa fecha en la agenda. */
   onSelectDate?: (date: string) => void;
+  /** Colores por trabajador; si no se indican, se calculan con las citas recibidas. */
+  colorFor?: WorkerColorFn;
 }
 
 // "9:00 a.m." → "9a" y "10:30 p.m." → "10:30p" para que entre en la celda del mes.
@@ -33,7 +36,7 @@ function firstName(name: string) {
   return name.split(" ")[0] || name;
 }
 
-export default function CalendarView({ appointments, onUpdated, focusDate, onSelectDate }: Props) {
+export default function CalendarView({ appointments, onUpdated, focusDate, onSelectDate, colorFor }: Props) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedCitaId, setSelectedCitaId] = useState<string | null>(null);
   const [editingCita, setEditingCita] = useState<Appointment | null>(null);
@@ -71,6 +74,13 @@ export default function CalendarView({ appointments, onUpdated, focusDate, onSel
   }, {});
 
   const dayCitas = appointmentsByDate[dayKey] || [];
+  const workerColor = useMemo(() => colorFor || buildWorkerColors(appointments), [colorFor, appointments]);
+  // Trabajadores con citas en el mes visible, para la leyenda.
+  const monthKey = format(currentDate, "yyyy-MM");
+  const monthWorkers = [...new Map(appointments
+    .filter((cita) => cita.fecha.startsWith(monthKey))
+    .map((cita) => [cita.id_empleado || "", fullName(cita.empleados) || "Sin asignar"] as const)).entries()]
+    .sort((a, b) => (a[0] === "" ? 1 : b[0] === "" ? -1 : a[1].localeCompare(b[1])));
   const workerCount = new Set(dayCitas.map((cita) => cita.id_empleado || "sin-asignar")).size;
   const detailCita = selectedCitaId ? appointments.find((cita) => cita.id === selectedCitaId) || null : null;
 
@@ -136,7 +146,7 @@ export default function CalendarView({ appointments, onUpdated, focusDate, onSel
         {view === "dia" && (
           <div className="px-3 pb-5 sm:px-6">
             {dayCitas.length
-              ? <WorkerDayGrid appointments={dayCitas} onSelect={(cita) => openCita(cita.id)} />
+              ? <WorkerDayGrid appointments={dayCitas} colorFor={workerColor} onSelect={(cita) => openCita(cita.id)} />
               : <div className="flex min-h-48 flex-col items-center justify-center rounded-2xl border border-dashed border-stone-200 px-6 py-10 text-center"><CalendarDays size={22} strokeWidth={1.4} className="text-stone-400" /><p className="mt-3 text-sm text-stone-600">No hay citas para este día.</p><button type="button" onClick={() => { setCurrentDate(new Date(`${dayKey}T12:00:00`)); setView("mes"); }} className="mt-3 min-h-10 text-xs font-semibold underline underline-offset-4">Buscar en el mes</button></div>}
           </div>
         )}
@@ -169,7 +179,7 @@ export default function CalendarView({ appointments, onUpdated, focusDate, onSel
                 </div>
                 {/* Móvil: puntos por estado */}
                 <div className="pointer-events-none relative mt-1 flex flex-wrap justify-center gap-0.5 sm:hidden">
-                  {apps.slice(0, 4).map((app) => <span key={app.id} className={`h-1.5 w-1.5 rounded-full ${statusColors[app.estado] || "bg-stone-400"}`} />)}
+                  {apps.slice(0, 4).map((app) => <span key={app.id} className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: workerColor(app.id_empleado).solid }} />)}
                 </div>
                 {/* Escritorio: primeras citas del día */}
                 <div className="relative mt-1 hidden space-y-0.5 sm:block">
@@ -178,10 +188,10 @@ export default function CalendarView({ appointments, onUpdated, focusDate, onSel
                       key={app.id}
                       type="button"
                       onClick={() => openCita(app.id)}
-                      title={`${formatTime(app.hora_inicio)} · ${citaClientName(app)} · ${citaServiceNames(app).join(", ")}`}
+                      title={`${formatTime(app.hora_inicio)} · ${citaClientName(app)} · ${citaServiceNames(app).join(", ")} · ${fullName(app.empleados) || "Sin asignar"}`}
                       className={`flex w-full items-center gap-1 rounded-md px-0.5 py-0.5 text-left text-[11px] leading-4 transition-colors hover:bg-white ${app.estado === "cancelada" ? "text-stone-400 line-through" : "text-brand-text"}`}
                     >
-                      <span aria-hidden="true" className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusColors[app.estado] || "bg-stone-400"}`} />
+                      <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: workerColor(app.id_empleado).solid }} />
                       <span className="shrink-0 tabular-nums text-stone-500">{shortTime(app.hora_inicio)}</span>
                       <span className="truncate">{firstName(citaClientName(app))}</span>
                     </button>
@@ -196,8 +206,9 @@ export default function CalendarView({ appointments, onUpdated, focusDate, onSel
           {Array.from({ length: trailingDays }, (_, index) => <div key={`trail-${index}`} className="min-h-14 bg-[#FAF9F6] sm:min-h-24" />)}
         </div>
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6">
-          <ul aria-label="Estados de las citas" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-600">
-            {Object.entries(estadoLabels).map(([estado, label]) => <li key={estado} className="flex items-center gap-1.5"><span aria-hidden="true" className={`h-2 w-2 rounded-full ${statusColors[estado]}`} />{label}</li>)}
+          <ul aria-label="Trabajadores" className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-600">
+            {monthWorkers.map(([id, label]) => <li key={id || "sin-asignar"} className="flex items-center gap-1.5"><span aria-hidden="true" className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: workerColor(id || null).solid }} />{label}</li>)}
+            {monthWorkers.length === 0 && <li>Sin citas este mes</li>}
           </ul>
         </div>
         </>}

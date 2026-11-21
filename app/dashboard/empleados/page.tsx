@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { BriefcaseBusiness, Edit2, Mail, Phone, Search, Trash2, UserCog, X } from "lucide-react";
 import CreateResourceModal from "@/components/forms/CreateResourceModal";
 import { supabase } from "@/lib/supabase";
 import { apiFetch } from "@/lib/api-fetch";
+import { buildWorkerColors } from "@/components/calendar/worker-colors";
 
 interface Empleado {
   id: string;
@@ -15,6 +16,7 @@ interface Empleado {
   cargo: string | null;
   rol: string;
   especialidad: string[] | null;
+  created_at?: string | null;
 }
 
 interface EmpleadoForm {
@@ -55,7 +57,8 @@ export default function EmpleadosPage() {
     `${empleado.nombre} ${empleado.apellido} ${empleado.email || ""} ${empleado.cargo || ""} ${(empleado.especialidad || []).join(" ")}`.toLowerCase().includes(search.toLowerCase())
   );
   const roles = new Set(empleados.map((empleado) => empleado.rol).filter(Boolean)).size;
-  const avatarColors = ["bg-brand-green text-white", "bg-brand-gold text-white", "bg-brand-cream text-brand-green"];
+  // Mismo color que cada persona tiene en la agenda (según su orden de creación).
+  const workerColor = useMemo(() => buildWorkerColors([], empleados), [empleados]);
 
   const abrirEdicion = (empleado: Empleado) => {
     setEmpleadoEditando(empleado);
@@ -101,7 +104,7 @@ export default function EmpleadosPage() {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "No se pudo actualizar el empleado");
-      setEmpleados((current) => current.map((item) => item.id === result.data.id ? result.data : item));
+      setEmpleados((current) => current.map((item) => item.id === result.data.id ? { ...item, ...result.data } : item));
       setEmpleadoEditando(null);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "No se pudo actualizar el empleado");
@@ -160,13 +163,13 @@ export default function EmpleadosPage() {
 
       {error && !empleadoEditando && <p className="text-sm text-red-600">{error}</p>}
       {loading ? <p className="py-12 text-center text-sm text-brand-text-light">Cargando equipo...</p> : filtered.length ? <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filtered.map((empleado, index) => (
+        {filtered.map((empleado) => (
           <article key={empleado.id} className="group overflow-hidden rounded-lg border border-brand-green/10 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-green/25 hover:shadow-bento">
-            <div className="h-1 bg-gradient-to-r from-brand-green via-brand-green/70 to-brand-gold" />
+            <div className="h-1" style={{ backgroundColor: workerColor(empleado.id).solid }} />
             <div className="p-5">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarColors[index % avatarColors.length]}`}>
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-sm font-semibold" style={{ backgroundColor: workerColor(empleado.id).soft, color: workerColor(empleado.id).text, boxShadow: `inset 0 0 0 1.5px ${workerColor(empleado.id).solid}` }} title={`Color en la agenda: ${workerColor(empleado.id).name}`}>
                     {empleado.nombre.charAt(0)}{empleado.apellido.charAt(0)}
                   </div>
                   <div className="min-w-0">
